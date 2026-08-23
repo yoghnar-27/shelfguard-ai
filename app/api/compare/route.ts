@@ -82,8 +82,8 @@ export async function POST(req: Request) {
       amazonUrl = await resolveAmazonUrl(rawAmazonUrl)
     }
 
-    // 2. Concurrent Marketplace Scrapers with Independent Promise.allSettled + 35s Max Timeout per Channel
-    const SCRAPER_TIMEOUT_MS = 35000
+    // 2. Concurrent Marketplace Scrapers with Independent Promise.allSettled + 65s Max Timeout per Channel
+    const SCRAPER_TIMEOUT_MS = 65000
 
     const amazonTask = hasAmazonUrl
       ? withTimeout(
@@ -119,25 +119,35 @@ export async function POST(req: Request) {
     let amazonOffer: MarketplaceProduct
     let amazonError: string | null = null
 
+    console.log(`[AMAZON] URL: ${rawAmazonUrl || "none"}`)
+
     if (amazonResult.status === "fulfilled" && amazonResult.value.data?.length) {
-      console.log(`[AMAZON] response received: ${amazonResult.value.data.length} records`)
-      amazonOffer = normalizeShelfGuardProduct(amazonResult.value.data[0], true)
+      const rawRecord = amazonResult.value.data[0]
+      console.log(`[AMAZON] HTTP STATUS: 200`)
+      console.log(`[AMAZON] RESPONSE TYPE: Array (${amazonResult.value.data.length} records)`)
+      console.log(`[AMAZON] RESPONSE KEYS: [${Object.keys(rawRecord).join(", ")}]`)
+
+      amazonOffer = normalizeShelfGuardProduct(rawRecord, true)
       amazonOffer.productUrl = rawAmazonUrl || amazonUrl
+
+      console.log(`[AMAZON] TITLE: ${amazonOffer.productName}`)
+      console.log(`[AMAZON] PRICE: ${amazonOffer.price}`)
+      console.log(`[AMAZON] ASIN: ${amazonOffer.productId}`)
 
       if (amazonOffer.price <= 0) {
         amazonOffer.isLive = false
         amazonOffer.productName = hasAmazonUrl ? "Unable to Retrieve" : "Not Provided"
         amazonError = "Bright Data Amazon scraper returned a record without a valid price > 0."
+        console.log(`[AMAZON] ERROR: ${amazonError}`)
+      } else {
+        console.log(`[AMAZON] ERROR: null`)
       }
-      console.log(`[AMAZON] parsed price: ${amazonOffer.price}`)
-      console.log(`[AMAZON] live: ${amazonOffer.isLive}`)
-      console.log(`[AMAZON] error: ${amazonError || "none"}`)
     } else {
       amazonError =
         amazonResult.status === "rejected"
           ? amazonResult.reason?.message || "Amazon scraper failed"
           : "Bright Data Amazon scraper returned zero product records."
-      console.log(`[AMAZON] error: ${amazonError}`)
+      console.log(`[AMAZON] ERROR: ${amazonError}`)
       amazonOffer = {
         marketplace: "amazon",
         productName: hasAmazonUrl ? "Unable to Retrieve" : "Not Provided",
