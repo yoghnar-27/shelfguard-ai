@@ -19,7 +19,6 @@ export function LiveProductManager({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [source, setSource] = useState<"live_brightdata" | "mock_fallback" | null>(null)
-  const [snapshotId, setSnapshotId] = useState<string | null>(null)
   const [liveProduct, setLiveProduct] = useState<Product | null>(null)
 
   async function handleScrape() {
@@ -43,11 +42,10 @@ export function LiveProductManager({
       const data = await res.json()
 
       if (!res.ok || !data.success) {
-        throw new Error(data.message || data.error || "Failed to extract product data from Bright Data.")
+        throw new Error(data.message || data.error || "Failed to extract product data.")
       }
 
       setSource(data.source)
-      setSnapshotId(data.snapshotId || null)
 
       if (Array.isArray(data.data) && data.data.length > 0) {
         const prod = data.data[0] as Product
@@ -84,25 +82,19 @@ export function LiveProductManager({
                   <span className="absolute inline-flex size-2 animate-ping rounded-full bg-teal opacity-75" />
                   <span className="relative inline-flex size-2 rounded-full bg-teal" />
                 </span>
-                LIVE DATA
+                LIVE MARKETPLACE DATA
               </span>
             ) : source === "mock_fallback" ? (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-gold/40 bg-gold/10 px-3 py-1 text-xs font-bold tracking-wider text-gold uppercase shadow-sm">
                 <Zap className="size-3 text-gold" />
-                DEMO FALLBACK
+                OFFLINE FALLBACK
               </span>
             ) : (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-muted/40 px-3 py-1 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                 <Sparkles className="size-3 text-gold" />
-                Bright Data Collector Console
+                Live Product Price Scraper
               </span>
             )}
-
-            {snapshotId ? (
-              <Badge variant="outline" className="font-mono text-[10px] text-muted-foreground border-border/60">
-                Snapshot: {snapshotId}
-              </Badge>
-            ) : null}
           </div>
 
           <Button
@@ -114,12 +106,12 @@ export function LiveProductManager({
             {loading ? (
               <>
                 <Loader2 className="mr-2 size-4 animate-spin" />
-                Extracting Live Data...
+                Scraping Live Price...
               </>
             ) : (
               <>
                 <RefreshCw className="mr-2 size-4" />
-                Refresh Live Data
+                Scrape Live Product
               </>
             )}
           </Button>
@@ -127,10 +119,10 @@ export function LiveProductManager({
 
         <div>
           <CardTitle className="font-heading text-lg font-bold tracking-tight text-foreground">
-            Live Marketplace Extraction (Bright Data Scraper Studio)
+            Live Product Price Scraper
           </CardTitle>
           <CardDescription className="text-xs">
-            Trigger server-side extraction for any Indian marketplace product URL to stream live PDP attributes into your intelligence dashboard.
+            Enter an Amazon product page URL to extract current price, stock status, and seller parameters in real time.
           </CardDescription>
         </div>
 
@@ -141,7 +133,7 @@ export function LiveProductManager({
               type="text"
               value={url}
               onChange={(e: ChangeEvent<HTMLInputElement>) => setUrl(e.target.value)}
-              placeholder="Enter Amazon / Marketplace product URL..."
+              placeholder="Enter Amazon product URL..."
               disabled={loading}
               className="w-full rounded-xl border border-border/80 bg-background/80 px-3.5 py-2 text-xs font-mono placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-50"
             />
@@ -153,11 +145,10 @@ export function LiveProductManager({
             disabled={loading}
             className="shrink-0 text-xs font-semibold"
           >
-            {loading ? "Scraping..." : "Scrape PDP"}
+            {loading ? "Scraping..." : "Scrape Price"}
           </Button>
         </div>
       </CardHeader>
-
 
       {/* Loading State Overlay */}
       {loading ? (
@@ -165,9 +156,9 @@ export function LiveProductManager({
           <div className="flex items-center gap-3 rounded-xl border border-teal/30 bg-teal/5 p-4 text-teal">
             <Loader2 className="size-5 animate-spin shrink-0 text-teal" />
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold">Bright Data Collector Active</p>
+              <p className="text-xs font-semibold">Extracting Live Product Parameters</p>
               <p className="text-[11px] text-muted-foreground">
-                Polling Scraper Studio collector <code className="font-mono text-teal">c_mt4maubd1v7q5h4l1e</code> for live product parameters...
+                Connecting to marketplace server to fetch latest price and stock status...
               </p>
             </div>
           </div>
@@ -180,7 +171,7 @@ export function LiveProductManager({
           <div className="flex items-start gap-3 rounded-xl border border-signal/40 bg-signal/10 p-4 text-signal">
             <AlertCircle className="size-5 shrink-0 mt-0.5" />
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold">Extraction Warning / Fallback Active</p>
+              <p className="text-xs font-semibold">Extraction Notice</p>
               <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">{error}</p>
             </div>
           </div>
@@ -196,7 +187,7 @@ export function LiveProductManager({
               Live Extracted SKU Result
             </span>
             <span className="text-[11px] font-mono text-muted-foreground">
-              Last checked: {new Date(liveProduct.lastChecked).toLocaleTimeString()}
+              Last updated: {new Date(liveProduct.lastChecked).toLocaleTimeString()}
             </span>
           </div>
 
@@ -226,7 +217,7 @@ export function LiveProductManager({
                     rel="noreferrer"
                     className="inline-flex items-center text-teal hover:underline font-medium"
                   >
-                    View Product Page <ExternalLink className="ml-1 size-3" />
+                    View Marketplace Page <ExternalLink className="ml-1 size-3" />
                   </a>
                 ) : null}
               </div>

@@ -2,7 +2,6 @@ import type {
   MarketplaceProduct,
   PriceComparisonSummary,
   StockComparisonSummary,
-  SupportedMarketplace,
 } from "./types"
 
 /**
@@ -15,10 +14,13 @@ export function calculatePercentageDifference(basePrice: number, targetPrice: nu
 }
 
 /**
- * Pure function: Compares prices across a set of marketplace product offers.
+ * Pure function: Compares prices strictly across LIVE marketplace product offers (isLive === true).
+ * Excludes unconnected, errored, or non-live fallback offers.
  */
 export function compareMarketplacePrices(offers: MarketplaceProduct[]): PriceComparisonSummary {
-  if (!offers.length) {
+  const liveOffers = offers.filter((o) => o && o.isLive === true && o.price > 0)
+
+  if (!liveOffers.length) {
     return {
       lowestPrice: 0,
       highestPrice: 0,
@@ -29,10 +31,10 @@ export function compareMarketplacePrices(offers: MarketplaceProduct[]): PriceCom
     }
   }
 
-  let lowestOffer = offers[0]
-  let highestOffer = offers[0]
+  let lowestOffer = liveOffers[0]
+  let highestOffer = liveOffers[0]
 
-  for (const offer of offers) {
+  for (const offer of liveOffers) {
     if (offer.price < lowestOffer.price) {
       lowestOffer = offer
     }
@@ -58,14 +60,16 @@ export function compareMarketplacePrices(offers: MarketplaceProduct[]): PriceCom
 }
 
 /**
- * Pure function: Evaluates inventory availability across marketplaces.
+ * Pure function: Evaluates inventory availability strictly across LIVE marketplace offers.
  */
 export function compareStockStatus(offers: MarketplaceProduct[]): StockComparisonSummary {
+  const liveOffers = offers.filter((o) => o && o.isLive === true)
+
   let inStockCount = 0
   let outOfStockCount = 0
-  const outOfStockMarketplaces: SupportedMarketplace[] = []
+  const outOfStockMarketplaces: Array<MarketplaceProduct["marketplace"]> = []
 
-  for (const offer of offers) {
+  for (const offer of liveOffers) {
     if (offer.stockStatus === "out_of_stock") {
       outOfStockCount++
       outOfStockMarketplaces.push(offer.marketplace)

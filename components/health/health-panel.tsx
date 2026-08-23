@@ -1,4 +1,5 @@
-import { healTimeline, kpis, scraperRuns, workspace } from "@/lib/mock"
+import { healTimeline, kpis, scraperRuns } from "@/lib/mock"
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { HeartPulse, CheckCircle2, AlertCircle } from "lucide-react"
@@ -34,22 +35,23 @@ export function HealthHero() {
         </div>
 
         <CardTitle className="mt-4 font-heading text-2xl tracking-tight text-foreground">
-          Self-Healing Collector Console
+          System Operational Health
         </CardTitle>
         <CardDescription className="max-w-2xl text-xs sm:text-sm">
-          Automated structural resilience pipeline monitoring DOM changes, selector breakage, and collector recovery.
+          Automated structural resilience pipeline monitoring marketplace availability, rate limits, and scan integrity.
         </CardDescription>
       </CardHeader>
 
       <CardContent className="relative z-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 pt-2">
-        <Stat label="Collector ID" value={workspace.collectorId} mono />
-        <Stat label="Last Extraction" value={kpis.lastRunAgo} />
-        <Stat label="Extraction Success" value={`${kpis.extractionRate}%`} />
+        <Stat label="Monitoring Status" value="Active — 100% Online" />
+        <Stat label="Last Successful Scan" value={kpis.lastRunAgo} />
+        <Stat label="Extraction Success Rate" value={`${kpis.extractionRate}%`} />
         <Stat label="Total Extracted Items" value={kpis.recordsCollected.toLocaleString()} />
       </CardContent>
     </Card>
   )
 }
+
 
 function Stat({
   label,

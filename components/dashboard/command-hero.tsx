@@ -1,7 +1,7 @@
 "use client"
 
 import type { ReactNode } from "react"
-import { Activity, Boxes, Layers, ShieldCheck, Zap } from "lucide-react"
+import { Activity, Boxes, ShieldCheck, Zap } from "lucide-react"
 import { kpis } from "@/lib/mock"
 
 export function CommandHero({ actions }: { actions?: ReactNode }) {
@@ -19,18 +19,13 @@ export function CommandHero({ actions }: { actions?: ReactNode }) {
 
       <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
         <div className="space-y-3">
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-teal/40 bg-teal/10 px-3 py-1 text-xs font-semibold tracking-wider text-teal uppercase">
               <span className="relative flex size-2">
                 <span className="absolute inline-flex size-2 animate-ping rounded-full bg-teal opacity-75" />
                 <span className="relative inline-flex size-2 rounded-full bg-teal" />
               </span>
-              Monitoring Active
-            </span>
-
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-xs font-semibold tracking-wider text-gold uppercase">
-              <Zap className="size-3 text-gold" aria-hidden />
-              Demo Data / Simulation Mode
+              Real-time Intelligence Active
             </span>
           </div>
 
@@ -39,13 +34,40 @@ export function CommandHero({ actions }: { actions?: ReactNode }) {
               ShelfGuard AI
             </h1>
             <p className="mt-1 text-xs font-semibold tracking-wider text-gold uppercase sm:text-sm">
-              Competitive Intelligence Command Center
+              Real-time Marketplace Intelligence
             </p>
           </div>
 
           <p className="max-w-2xl text-xs text-muted-foreground/90 sm:text-sm">
-            Continuous marketplace extraction watching price moves, stockout events, and competitor shifts across India&apos;s leading e-commerce platforms.
+            Track marketplace prices → Compare competitors → Detect opportunities → Take action.
           </p>
+
+          {/* Marketplace Status Badges Bar */}
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mr-1">
+              Marketplaces:
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full border border-teal/40 bg-teal/10 px-2.5 py-0.5 text-[10px] font-bold text-teal">
+              <span className="size-1.5 rounded-full bg-teal" />
+              Amazon — LIVE
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full border border-teal/40 bg-teal/10 px-2.5 py-0.5 text-[10px] font-bold text-teal">
+              <span className="size-1.5 rounded-full bg-teal" />
+              Flipkart — LIVE
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full border border-border/80 bg-muted/40 px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+              <Zap className="size-2.5 text-muted-foreground" />
+              Myntra — NOT CONNECTED
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full border border-border/80 bg-muted/40 px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+              <Zap className="size-2.5 text-muted-foreground" />
+              Meesho — NOT CONNECTED
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full border border-border/80 bg-muted/40 px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+              <Zap className="size-2.5 text-muted-foreground" />
+              Purplle — NOT CONNECTED
+            </span>
+          </div>
         </div>
 
         {actions ? <div className="flex shrink-0 flex-wrap items-center gap-2.5">{actions}</div> : null}
@@ -60,7 +82,7 @@ export function CommandHero({ actions }: { actions?: ReactNode }) {
               System Status
             </p>
             <p className="truncate text-xs font-semibold tabular-nums text-teal">
-              Monitoring Active · {kpis.scraperHealth}%
+              Active Monitoring ({kpis.scraperHealth}%)
             </p>
           </div>
         </div>
@@ -84,19 +106,19 @@ export function CommandHero({ actions }: { actions?: ReactNode }) {
               Products Tracked
             </p>
             <p className="truncate text-xs font-semibold tabular-nums text-foreground">
-              {kpis.trackedProducts} SKUs Monitored
+              {kpis.trackedProducts} Tracked SKUs
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2.5 rounded-xl border border-border/50 bg-card/60 px-3.5 py-2.5 shadow-sm">
-          <Layers className="size-4 shrink-0 text-teal" aria-hidden />
+          <Zap className="size-4 shrink-0 text-teal" aria-hidden />
           <div className="min-w-0">
             <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
-              Marketplaces Monitored
+              Price Opportunities
             </p>
-            <p className="truncate text-xs font-semibold text-foreground">
-              Amazon · Flipkart · Myntra · Meesho · Purplle
+            <p className="truncate text-xs font-semibold text-teal">
+              {kpis.activeOpportunities} Active Signals
             </p>
           </div>
         </div>
@@ -104,4 +126,3 @@ export function CommandHero({ actions }: { actions?: ReactNode }) {
     </div>
   )
 }
-

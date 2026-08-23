@@ -58,19 +58,19 @@ export function OpportunityCard({
               <div className="flex items-center gap-2">
                 <span
                   className={cn(
-                    "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-semibold tracking-wider uppercase",
+                    "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase",
                     severityClass(opportunity.severity)
                   )}
                 >
                   <Sparkles className="size-3" />
-                  {opportunity.severity} priority
+                  {opportunity.severity} impact
                 </span>
               </div>
-              <p className="mt-2 font-heading text-base font-semibold tracking-tight text-foreground group-hover:text-gold transition-colors">
-                {opportunity.productName}
+              <p className="mt-2 font-heading text-base font-bold tracking-tight text-foreground group-hover:text-gold transition-colors">
+                {opportunity.event}
               </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {opportunity.competitor} · {opportunity.event.replace("went ", "")}
+              <p className="mt-1 text-xs font-medium text-muted-foreground">
+                Product: <span className="text-foreground font-semibold">{opportunity.productName}</span> ({opportunity.competitor})
               </p>
             </button>
             <ScoreRing score={opportunity.score} />
@@ -78,16 +78,16 @@ export function OpportunityCard({
 
           <dl className="grid grid-cols-2 gap-3 rounded-xl border border-border/50 bg-background/40 p-3 text-xs">
             <div>
-              <dt className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
-                Estimated impact
+              <dt className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
+                Estimated Impact
               </dt>
               <dd className="mt-1 font-medium text-foreground">{opportunity.impact}</dd>
             </div>
             <div>
-              <dt className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
-                Opportunity score
+              <dt className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
+                Opportunity Score
               </dt>
-              <dd className="mt-1 font-mono font-medium tabular-nums text-gold">{opportunity.score} / 100</dd>
+              <dd className="mt-1 font-mono font-bold tabular-nums text-gold">{opportunity.score} / 100</dd>
             </div>
           </dl>
 
@@ -101,7 +101,7 @@ export function OpportunityCard({
             <div className="overflow-hidden space-y-3.5 border-t border-border/60 pt-3 text-xs">
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-lg border border-border/50 bg-muted/20 p-2.5">
-                  <p className="text-[10px] font-semibold tracking-widest text-gold uppercase">
+                  <p className="text-[10px] font-bold tracking-widest text-gold uppercase">
                     Why This Matters
                   </p>
                   <p className="mt-1 text-xs text-foreground leading-relaxed">
@@ -110,17 +110,17 @@ export function OpportunityCard({
                 </div>
 
                 <div className="rounded-lg border border-border/50 bg-muted/20 p-2.5">
-                  <p className="text-[10px] font-semibold tracking-widest text-teal uppercase">
+                  <p className="text-[10px] font-bold tracking-widest text-teal uppercase">
                     Evidence
                   </p>
                   <p className="mt-1 text-xs font-mono text-muted-foreground">
-                    Event: {opportunity.event} ({formatDateTime(opportunity.at)})
+                    {opportunity.event} ({formatDateTime(opportunity.at)})
                   </p>
                 </div>
               </div>
 
               <div>
-                <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
+                <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
                   Recommended Action
                 </p>
                 <p className="mt-1 text-xs leading-relaxed text-foreground font-medium bg-muted/40 p-2.5 rounded-lg border border-border/40">
@@ -129,11 +129,12 @@ export function OpportunityCard({
               </div>
 
               <div className="flex items-center justify-between border-t border-border/40 pt-2 text-[11px]">
-                <span className="font-semibold text-muted-foreground uppercase tracking-wider">Potential Impact:</span>
-                <span className="font-medium text-teal">{opportunity.impact}</span>
+                <span className="font-bold text-muted-foreground uppercase tracking-wider">Potential Impact:</span>
+                <span className="font-semibold text-teal">{opportunity.impact}</span>
               </div>
             </div>
           </div>
+
 
 
           <div className="flex flex-wrap items-center gap-2 pt-1">

@@ -31,9 +31,21 @@ export async function POST(req: Request) {
       }
     } catch (err) {
       amazonError = err instanceof Error ? err.message : String(err)
-      console.warn(`[API Compare] Amazon extraction warning: ${amazonError}`)
-      // Explicit fallback labeled isLive: false
-      amazonOffer = normalizeShelfGuardProduct(products[0], false)
+      console.warn(`[API Compare] Amazon extraction fallback: ${amazonError}`)
+      // Explicit fallback labeled isLive: false with price 0 to prevent fake comparison
+      amazonOffer = {
+        marketplace: "amazon",
+        productName: products[0].name,
+        brand: products[0].competitor,
+        productId: products[0].sku,
+        price: 0,
+        originalPrice: 0,
+        currency: "INR",
+        stockStatus: "out_of_stock",
+        productUrl: amazonUrl,
+        lastChecked: new Date().toISOString(),
+        isLive: false,
+      }
     }
 
     // 2. Live Flipkart Extraction via Datasets v3 Scraper
@@ -46,16 +58,13 @@ export async function POST(req: Request) {
         flipkartError = "Provided URL is not a valid flipkart.com product URL."
         flipkartOffer = {
           marketplace: "flipkart",
-          productName: amazonOffer.productName,
-          brand: amazonOffer.brand,
-          productId: `FK-INVALID`,
-          price: Math.round(amazonOffer.price * 0.94),
-          originalPrice: amazonOffer.originalPrice,
+          productName: "Not Connected",
+          brand: "Flipkart",
+          productId: "FK-UNCONNECTED",
+          price: 0,
+          originalPrice: 0,
           currency: "INR",
-          stockStatus: "in_stock",
-          rating: 4.4,
-          reviewCount: 156,
-          imageUrl: null,
+          stockStatus: "out_of_stock",
           productUrl: flipkartUrl,
           lastChecked: new Date().toISOString(),
           isLive: false,
@@ -63,27 +72,24 @@ export async function POST(req: Request) {
       } else {
         try {
           const flipkartScrapeRes = await scrapeFlipkartProduct(flipkartUrl)
-          if (flipkartScrapeRes.product) {
+          if (flipkartScrapeRes.product && flipkartScrapeRes.product.price > 0) {
             flipkartOffer = flipkartScrapeRes.product
             isFlipkartLive = true
           } else {
-            throw new Error("Flipkart Datasets API returned no product record.")
+            throw new Error("Flipkart Datasets API returned no valid price or product record.")
           }
         } catch (err) {
           flipkartError = err instanceof Error ? err.message : String(err)
           console.warn(`[API Compare] Flipkart extraction error: ${flipkartError}`)
           flipkartOffer = {
             marketplace: "flipkart",
-            productName: amazonOffer.productName,
-            brand: amazonOffer.brand,
-            productId: `FK-ERROR`,
-            price: Math.round(amazonOffer.price * 0.94),
-            originalPrice: amazonOffer.originalPrice,
+            productName: "Not Connected",
+            brand: "Flipkart",
+            productId: "FK-UNCONNECTED",
+            price: 0,
+            originalPrice: 0,
             currency: "INR",
-            stockStatus: "in_stock",
-            rating: 4.4,
-            reviewCount: 156,
-            imageUrl: null,
+            stockStatus: "out_of_stock",
             productUrl: flipkartUrl,
             lastChecked: new Date().toISOString(),
             isLive: false,
@@ -91,19 +97,16 @@ export async function POST(req: Request) {
         }
       }
     } else {
-      // Demo Flipkart offer when no URL supplied
+      // Unconnected Flipkart state
       flipkartOffer = {
         marketplace: "flipkart",
-        productName: amazonOffer.productName,
-        brand: amazonOffer.brand,
-        productId: `FK-UNCONNECTED-${amazonOffer.productId}`,
-        price: Math.round(amazonOffer.price * 0.94),
-        originalPrice: amazonOffer.originalPrice,
+        productName: "Not Connected",
+        brand: "Flipkart",
+        productId: "FK-UNCONNECTED",
+        price: 0,
+        originalPrice: 0,
         currency: "INR",
-        stockStatus: "in_stock",
-        rating: 4.4,
-        reviewCount: 156,
-        imageUrl: null,
+        stockStatus: "out_of_stock",
         productUrl: "https://www.flipkart.com",
         lastChecked: new Date().toISOString(),
         isLive: false,
@@ -112,7 +115,7 @@ export async function POST(req: Request) {
 
     const offers: MarketplaceProduct[] = [amazonOffer, flipkartOffer]
 
-    // 3. Normalized Competitive Intelligence Comparison
+    // 3. Normalized Competitive Intelligence Comparison (strictly on isLive === true)
     const priceSummary = compareMarketplacePrices(offers)
     const stockSummary = compareStockStatus(offers)
     const opportunities = detectOpportunities(offers, priceSummary, stockSummary)
@@ -151,4 +154,3 @@ export async function POST(req: Request) {
     )
   }
 }
-
