@@ -15,7 +15,9 @@ import {
   getProductOpportunities,
   getStockHistory,
 } from "@/lib/mock"
+import { generateCompetitiveIntelligence } from "@/lib/intelligence"
 import { cn } from "@/lib/utils"
+import { ExternalLink, Sparkles, Zap } from "lucide-react"
 
 export function ProductIntelligence({ id }: { id: string }) {
   let product = getProduct(id)
@@ -50,7 +52,6 @@ export function ProductIntelligence({ id }: { id: string }) {
     )
   }
 
-
   const history = getPriceHistory(product.id)
   const stock = getStockHistory(product.id)
   const detected = getProductChanges(product.id)
@@ -58,8 +59,11 @@ export function ProductIntelligence({ id }: { id: string }) {
   const comps = getCompetitorsFor(product)
   const delta = formatDelta(product.currentPrice, product.previousPrice)
 
+  // Generate Multi-Retailer Competitive Intelligence
+  const intelligence = generateCompetitiveIntelligence(product)
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 page-enter">
       <div className="grid gap-4 lg:grid-cols-[1.4fr_0.8fr]">
         <Card className="hairline">
           <CardHeader>
@@ -68,15 +72,15 @@ export function ProductIntelligence({ id }: { id: string }) {
               <MonitorPill status={product.monitorStatus} />
               <StockPill status={product.stockStatus} />
             </div>
-            <CardTitle className="text-xl">{product.name}</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-xl font-heading font-bold text-foreground">{product.name}</CardTitle>
+            <CardDescription className="text-xs">
               {product.competitor} · {product.sku} · last extract {formatDateTime(product.lastChecked)}
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-3">
             <div>
               <p className="text-[11px] tracking-wide text-muted-foreground uppercase">Current price</p>
-              <p className="mt-1 font-heading text-2xl tabular-nums">
+              <p className="mt-1 font-heading text-2xl tabular-nums font-bold text-foreground">
                 {formatMoney(product.currentPrice)}
               </p>
             </div>
@@ -84,7 +88,7 @@ export function ProductIntelligence({ id }: { id: string }) {
               <p className="text-[11px] tracking-wide text-muted-foreground uppercase">Change</p>
               <p
                 className={cn(
-                  "mt-1 text-lg tabular-nums",
+                  "mt-1 text-lg tabular-nums font-semibold",
                   delta.direction === "down" && "text-teal",
                   delta.direction === "up" && "text-signal"
                 )}
@@ -94,14 +98,14 @@ export function ProductIntelligence({ id }: { id: string }) {
             </div>
             <div>
               <p className="text-[11px] tracking-wide text-muted-foreground uppercase">Variants</p>
-              <p className="mt-1 text-sm">{product.variants.join(" · ")}</p>
+              <p className="mt-1 text-sm font-medium">{product.variants.join(" · ")}</p>
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Opportunity indicators</CardTitle>
-            <CardDescription>
+            <CardTitle className="font-heading text-lg">Opportunity indicators</CardTitle>
+            <CardDescription className="text-xs">
               {opps.length ? `${opps.length} live demo opportunity(s)` : "No material opportunity on this SKU"}
             </CardDescription>
           </CardHeader>
@@ -117,7 +121,105 @@ export function ProductIntelligence({ id }: { id: string }) {
         </Card>
       </div>
 
+      {/* Multi-Retailer Marketplace Comparison Table */}
+      <Card className="hairline border-gold/30 bg-card/90">
+        <CardHeader>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <CardTitle className="font-heading text-lg flex items-center gap-2">
+                <Sparkles className="size-4 text-gold" />
+                Cross-Marketplace Price & Stock Comparison
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Real-time price spread across Amazon, Flipkart, Myntra, Meesho & Purplle.
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="rounded-full border border-teal/40 bg-teal/10 px-2.5 py-0.5 text-[10px] font-bold text-teal uppercase">
+                Spread: {intelligence.priceSummary.priceSpreadPercentage}%
+              </span>
+              <span className="rounded-full border border-gold/40 bg-gold/10 px-2.5 py-0.5 text-[10px] font-bold text-gold uppercase">
+                Cheapest: {intelligence.priceSummary.cheapestMarketplace.toUpperCase()}
+              </span>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="overflow-x-auto space-y-4">
+          <table className="w-full min-w-[600px] text-left text-sm">
+            <thead className="bg-muted/30 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+              <tr className="border-b border-border/70">
+                <th className="px-4 py-3 font-medium">Marketplace</th>
+                <th className="px-4 py-3 font-medium">Data Status</th>
+                <th className="px-4 py-3 font-medium">Price (INR)</th>
+                <th className="px-4 py-3 font-medium">Price Variance</th>
+                <th className="px-4 py-3 font-medium">Stock Status</th>
+                <th className="px-4 py-3 font-medium">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {intelligence.offers.map((offer) => {
+                const isCheapest = offer.marketplace === intelligence.priceSummary.cheapestMarketplace
+                const variance = offer.price - intelligence.priceSummary.lowestPrice
+                const variancePct =
+                  intelligence.priceSummary.lowestPrice > 0
+                    ? Number(((variance / intelligence.priceSummary.lowestPrice) * 100).toFixed(1))
+                    : 0
+
+                return (
+                  <tr key={offer.marketplace} className="border-b border-border/50 last:border-0 hover:bg-muted/20">
+                    <td className="px-4 py-3 font-heading font-semibold text-foreground capitalize">
+                      {offer.marketplace}
+                    </td>
+                    <td className="px-4 py-3">
+                      {offer.isLive ? (
+                        <span className="inline-flex items-center gap-1 rounded-full border border-teal/40 bg-teal/10 px-2 py-0.5 text-[10px] font-bold text-teal uppercase">
+                          <span className="size-1.5 rounded-full bg-teal animate-pulse" />
+                          LIVE (BRIGHT DATA)
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded-full border border-border/80 bg-muted/40 px-2 py-0.5 text-[10px] font-medium text-muted-foreground uppercase">
+                          <Zap className="size-3 text-gold" />
+                          DEMO / UNCONNECTED
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 font-mono font-bold tabular-nums text-foreground">
+                      {formatMoney(offer.price)}
+                    </td>
+                    <td className="px-4 py-3 font-mono text-xs tabular-nums">
+                      {isCheapest ? (
+                        <span className="text-teal font-bold">Lowest Price</span>
+                      ) : (
+                        <span className="text-signal">+{variancePct}% (+₹{variance.toLocaleString()})</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <StockPill status={offer.stockStatus} />
+                    </td>
+                    <td className="px-4 py-3">
+                      {offer.productUrl && offer.productUrl !== "#" ? (
+                        <a
+                          href={offer.productUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center text-xs text-gold hover:underline font-medium"
+                        >
+                          PDP Link <ExternalLink className="ml-1 size-3" />
+                        </a>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </CardContent>
+      </Card>
+
       <Card>
+
         <CardHeader>
           <CardTitle>Historical price</CardTitle>
           <CardDescription>Mock extract history for this product page.</CardDescription>
