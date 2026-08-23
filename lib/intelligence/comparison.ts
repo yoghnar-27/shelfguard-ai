@@ -14,6 +14,44 @@ export function calculatePercentageDifference(basePrice: number, targetPrice: nu
 }
 
 /**
+ * Product Similarity / Match Evaluator
+ * Checks whether live extracted products appear to match the same underlying item.
+ */
+export function areProductsMatching(offers: MarketplaceProduct[]): {
+  isMatch: boolean
+  message?: string
+} {
+  const liveOffers = offers.filter((o) => o && o.isLive === true && o.price > 0)
+  if (liveOffers.length <= 1) return { isMatch: true }
+
+  const cleanWords = (text: string) => {
+    return text
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, " ")
+      .split(/\s+/)
+      .filter((w) => w.length > 2)
+  }
+
+  const baseWords = cleanWords(liveOffers[0].productName)
+
+  for (let i = 1; i < liveOffers.length; i++) {
+    const targetWords = cleanWords(liveOffers[i].productName)
+    const common = baseWords.filter((w) => targetWords.includes(w))
+    const minLen = Math.min(baseWords.length, targetWords.length)
+    const overlapRatio = minLen > 0 ? common.length / minLen : 0
+
+    if (minLen > 2 && overlapRatio < 0.25) {
+      return {
+        isMatch: false,
+        message: "Products don't appear to match",
+      }
+    }
+  }
+
+  return { isMatch: true }
+}
+
+/**
  * Pure function: Compares prices strictly across LIVE marketplace product offers (isLive === true).
  * Excludes unconnected, errored, or non-live fallback offers.
  */

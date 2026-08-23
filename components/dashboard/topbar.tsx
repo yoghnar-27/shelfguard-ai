@@ -12,7 +12,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { Sidebar } from "@/components/dashboard/sidebar"
-import { workspace } from "@/lib/mock"
+import { ThemeOrb } from "@/components/theme/theme-orb"
 
 const titles: Record<string, string> = {
   "/": "Command Center",
@@ -45,19 +45,21 @@ export function Topbar() {
           <Menu />
         </Button>
         <div className="min-w-0">
-          <p className="truncate text-sm font-medium">{titleFor(pathname)}</p>
-          <p className="truncate text-[11px] text-muted-foreground">
-            {workspace.seller} · {workspace.region}
+          <p className="truncate text-sm font-bold tracking-tight text-foreground">{titleFor(pathname)}</p>
+          <p className="truncate text-[11px] font-mono text-muted-foreground">
+            AMAZON · FLIPKART · MYNTRA
           </p>
         </div>
       </div>
-      <div className="flex items-center gap-2">
-        <span className="hidden rounded-full border border-gold/25 bg-gold/8 px-2.5 py-1 text-[11px] text-gold sm:inline">
-          Demo data only
+
+      <div className="flex items-center gap-3">
+        <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-teal/30 bg-teal/10 px-3 py-1 text-[10px] font-bold text-teal uppercase tracking-wider">
+          <span className="size-1.5 rounded-full bg-teal animate-pulse" />
+          Live Radar Active
         </span>
-        <span className="rounded-full border border-border bg-muted/40 px-2.5 py-1 font-mono text-[11px] text-muted-foreground">
-          {workspace.collectorId}
-        </span>
+
+        {/* 3D Theme Orb Control Trigger */}
+        <ThemeOrb />
       </div>
 
       <Sheet open={open} onOpenChange={setOpen}>

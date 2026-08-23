@@ -43,6 +43,19 @@
   --color-gold-foreground: var(--gold-foreground);
   --color-teal: var(--teal);
   --color-signal: var(--signal);
+  --color-theme-primary: var(--theme-primary);
+  --color-theme-secondary: var(--theme-secondary);
+  --color-theme-accent: var(--theme-accent);
+  --color-theme-background: var(--theme-background);
+  --color-theme-surface: var(--theme-surface);
+  --color-theme-surface-elevated: var(--theme-surface-elevated);
+  --color-theme-border: var(--theme-border);
+  --color-theme-text: var(--theme-text);
+  --color-theme-muted: var(--theme-muted);
+  --color-theme-glow: var(--theme-glow);
+  --color-theme-radar: var(--theme-radar);
+  --color-theme-chart: var(--theme-chart);
+  --color-theme-button: var(--theme-button);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -142,8 +155,8 @@
   body {
     @apply bg-background text-foreground antialiased;
     background-image:
-      radial-gradient(1100px 500px at 12% -10%, oklch(0.35 0.06 85 / 0.12), transparent 60%),
-      radial-gradient(800px 400px at 95% 5%, oklch(0.35 0.06 185 / 0.08), transparent 55%),
+      radial-gradient(1100px 500px at 12% -10%, var(--theme-primary-glow, rgba(225, 29, 72, 0.18)), transparent 60%),
+      radial-gradient(800px 400px at 95% 5%, var(--theme-secondary-glow, rgba(253, 224, 71, 0.12)), transparent 55%),
       linear-gradient(to right, oklch(1 0 0 / 0.015) 1px, transparent 1px),
       linear-gradient(to bottom, oklch(1 0 0 / 0.015) 1px, transparent 1px);
     background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;

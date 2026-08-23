@@ -60,11 +60,13 @@ export function normalizeMarketplaceProduct(
 
 /**
  * Converts existing ShelfGuard Product domain model into the normalized MarketplaceProduct model.
+ * Guarantees isLive is set to false if price is 0.
  */
 export function normalizeShelfGuardProduct(
   product: Product,
   isLive = false
 ): MarketplaceProduct {
+  const isRealLive = Boolean(isLive && product.currentPrice > 0)
   return {
     marketplace: "amazon",
     productName: product.name,
@@ -79,6 +81,7 @@ export function normalizeShelfGuardProduct(
     imageUrl: null,
     productUrl: product.url,
     lastChecked: product.lastChecked,
-    isLive,
+    isLive: isRealLive,
   }
 }
+

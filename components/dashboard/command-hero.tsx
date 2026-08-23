@@ -55,19 +55,12 @@ export function CommandHero({ actions }: { actions?: ReactNode }) {
               <span className="size-1.5 rounded-full bg-teal" />
               Flipkart — LIVE
             </span>
-            <span className="inline-flex items-center gap-1 rounded-full border border-border/80 bg-muted/40 px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-              <Zap className="size-2.5 text-muted-foreground" />
-              Myntra — NOT CONNECTED
-            </span>
-            <span className="inline-flex items-center gap-1 rounded-full border border-border/80 bg-muted/40 px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-              <Zap className="size-2.5 text-muted-foreground" />
-              Meesho — NOT CONNECTED
-            </span>
-            <span className="inline-flex items-center gap-1 rounded-full border border-border/80 bg-muted/40 px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-              <Zap className="size-2.5 text-muted-foreground" />
-              Purplle — NOT CONNECTED
+            <span className="inline-flex items-center gap-1 rounded-full border border-teal/40 bg-teal/10 px-2.5 py-0.5 text-[10px] font-bold text-teal">
+              <span className="size-1.5 rounded-full bg-teal" />
+              Myntra — LIVE
             </span>
           </div>
+
         </div>
 
         {actions ? <div className="flex shrink-0 flex-wrap items-center gap-2.5">{actions}</div> : null}

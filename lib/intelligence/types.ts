@@ -2,8 +2,8 @@ export type SupportedMarketplace =
   | "amazon"
   | "flipkart"
   | "myntra"
-  | "meesho"
-  | "purplle"
+  | "ajio"
+  | "nykaa"
 
 export type MarketplaceProduct = {
   marketplace: SupportedMarketplace
@@ -20,6 +20,7 @@ export type MarketplaceProduct = {
   productUrl: string
   lastChecked: string
   isLive: boolean
+  error?: string | null
 }
 
 export type OpportunityRuleKind =

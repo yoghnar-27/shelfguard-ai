@@ -141,7 +141,7 @@ export async function pollBrightDataResult(
   options?: BrightDataPollOptions
 ): Promise<BrightDataProduct[]> {
   const config = getBrightDataConfig()
-  const intervalMs = options?.intervalMs ?? 5000
+  const intervalMs = options?.intervalMs ?? 2000
   const maxAttempts = options?.maxAttempts ?? 30
   const timeoutMs = options?.timeoutMs ?? 150000
 

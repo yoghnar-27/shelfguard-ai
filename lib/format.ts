@@ -1,12 +1,19 @@
 import type { StockStatus } from "@/lib/mock/types"
 
-const currency = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-})
+/**
+ * Formats numeric values into Indian Rupees (INR) with Indian number grouping (en-IN).
+ * Safely handles numbers, numeric strings, zero, null/undefined, and returns "Unavailable" for <= 0.
+ */
+export function formatINR(value?: number | string | null): string {
+  if (value === null || value === undefined) return "Unavailable"
+  const num = typeof value === "string" ? Number.parseFloat(value.replace(/[^0-9.]/g, "")) : value
+  if (Number.isNaN(num) || num <= 0) return "Unavailable"
 
-export function formatMoney(value: number) {
-  return currency.format(value)
+  return `₹${num.toLocaleString("en-IN")}`
+}
+
+export function formatMoney(value?: number | string | null): string {
+  return formatINR(value)
 }
 
 export function formatPct(value: number, digits = 1) {
@@ -22,29 +29,30 @@ export function priceDelta(current: number, previous: number) {
 export function formatDelta(current: number, previous: number) {
   const { amount, pct } = priceDelta(current, previous)
   const sign = amount > 0 ? "+" : amount < 0 ? "" : ""
+  const absAmount = Math.abs(amount)
   return {
     amount,
     pct,
-    label: `${sign}${formatMoney(amount)} (${sign}${pct.toFixed(1)}%)`,
+    label: `${sign}₹${absAmount.toLocaleString("en-IN")} (${sign}${pct.toFixed(1)}%)`,
     direction: amount === 0 ? "flat" : amount < 0 ? "down" : "up",
   } as const
 }
 
 export function formatTime(iso: string) {
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat("en-IN", {
     hour: "numeric",
     minute: "2-digit",
-    timeZone: "UTC",
+    timeZone: "Asia/Kolkata",
   }).format(new Date(iso))
 }
 
 export function formatDateTime(iso: string) {
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat("en-IN", {
     month: "short",
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
-    timeZone: "UTC",
+    timeZone: "Asia/Kolkata",
     hourCycle: "h23",
   }).format(new Date(iso))
 }

@@ -1,0 +1,438 @@
+/**
+ * ShelfGuard AI Multi-Color Theme System
+ * Centralized Single Source of Truth for 8 Luxury Retail Intelligence Palettes:
+ * 1. Forest Couture (forest_couture / forest-couture)
+ * 2. Imperial Ruby (imperial_ruby / imperial-ruby) [DEFAULT FALLBACK]
+ * 3. Sunset Amber (sunset_amber / sunset-amber)
+ * 4. Burgundy Gold (burgundy_gold / burgundy-gold)
+ * 5. Aurora Purple (aurora_purple / aurora-purple)
+ * 6. Midnight Teal (midnight_teal / midnight-teal)
+ * 7. Oceanic Blue (oceanic_blue / oceanic-blue)
+ * 8. Emerald Signal (emerald_signal / emerald-signal)
+ */
+
+export type ThemePaletteId =
+  | "forest_couture"
+  | "imperial_ruby"
+  | "sunset_amber"
+  | "burgundy_gold"
+  | "aurora_purple"
+  | "midnight_teal"
+  | "oceanic_blue"
+  | "emerald_signal"
+
+export interface ThemePalette {
+  id: ThemePaletteId
+  name: string
+  subtitle: string
+  primaryAccent: string
+  secondaryAccent: string
+  bg: string
+  surface: string
+  text: string
+  liveColor: string
+  cssVars: Record<string, string>
+}
+
+export const THEME_PALETTES: Record<ThemePaletteId, ThemePalette> = {
+  forest_couture: {
+    id: "forest_couture",
+    name: "Forest Couture",
+    subtitle: "Deep Emerald & Mint Glow",
+    primaryAccent: "#10B981",
+    secondaryAccent: "#34D399",
+    bg: "#081410",
+    surface: "#0E1F19",
+    text: "#F7F4EF",
+    liveColor: "#34D399",
+    cssVars: {
+      "--theme-primary": "#10B981",
+      "--theme-secondary": "#34D399",
+      "--theme-accent": "#6EE7B7",
+      "--theme-background": "#081410",
+      "--theme-surface": "#0E1F19",
+      "--theme-surface-elevated": "#152E25",
+      "--theme-border": "rgba(52, 211, 153, 0.25)",
+      "--theme-text": "#F7F4EF",
+      "--theme-muted": "#85A396",
+      "--theme-glow": "rgba(16, 185, 129, 0.30)",
+      "--theme-primary-glow": "rgba(16, 185, 129, 0.20)",
+      "--theme-secondary-glow": "rgba(52, 211, 153, 0.15)",
+      "--theme-radar": "#10B981",
+      "--theme-chart": "#34D399",
+      "--theme-button": "#059669",
+      "--background": "oklch(0.12 0.03 160)",
+      "--foreground": "oklch(0.96 0.01 90)",
+      "--card": "oklch(0.16 0.03 160)",
+      "--card-foreground": "oklch(0.96 0.01 90)",
+      "--primary": "oklch(0.72 0.17 160)",
+      "--primary-foreground": "oklch(0.12 0.03 160)",
+      "--secondary": "oklch(0.20 0.03 160)",
+      "--secondary-foreground": "oklch(0.96 0.01 90)",
+      "--muted": "oklch(0.18 0.03 160)",
+      "--muted-foreground": "oklch(0.70 0.02 150)",
+      "--accent": "oklch(0.80 0.12 160)",
+      "--accent-foreground": "oklch(0.12 0.03 160)",
+      "--border": "rgba(52, 211, 153, 0.25)",
+      "--ring": "oklch(0.72 0.17 160)",
+      "--gold": "oklch(0.78 0.16 160)",
+      "--gold-foreground": "oklch(0.12 0.03 160)",
+      "--teal": "oklch(0.78 0.16 160)",
+      "--signal": "oklch(0.72 0.17 160)",
+    },
+  },
+  imperial_ruby: {
+    id: "imperial_ruby",
+    name: "Imperial Ruby",
+    subtitle: "Dark Imperial Blue & Ruby Accent",
+    primaryAccent: "#E11D48",
+    secondaryAccent: "#FDE047",
+    bg: "#0B0F18",
+    surface: "#141A27",
+    text: "#F5F0E8",
+    liveColor: "#FB7185",
+    cssVars: {
+      "--theme-primary": "#E11D48",
+      "--theme-secondary": "#FDE047",
+      "--theme-accent": "#FB7185",
+      "--theme-background": "#0B0F18",
+      "--theme-surface": "#141A27",
+      "--theme-surface-elevated": "#1E2638",
+      "--theme-border": "rgba(225, 29, 72, 0.25)",
+      "--theme-text": "#F5F0E8",
+      "--theme-muted": "#94A3B8",
+      "--theme-glow": "rgba(225, 29, 72, 0.30)",
+      "--theme-primary-glow": "rgba(225, 29, 72, 0.20)",
+      "--theme-secondary-glow": "rgba(253, 224, 71, 0.15)",
+      "--theme-radar": "#E11D48",
+      "--theme-chart": "#FB7185",
+      "--theme-button": "#BE123C",
+      "--background": "oklch(0.13 0.02 260)",
+      "--foreground": "oklch(0.96 0.01 80)",
+      "--card": "oklch(0.16 0.02 260)",
+      "--card-foreground": "oklch(0.96 0.01 80)",
+      "--primary": "oklch(0.60 0.22 20)",
+      "--primary-foreground": "oklch(0.98 0.01 80)",
+      "--secondary": "oklch(0.20 0.03 260)",
+      "--secondary-foreground": "oklch(0.96 0.01 80)",
+      "--muted": "oklch(0.18 0.02 260)",
+      "--muted-foreground": "oklch(0.70 0.01 80)",
+      "--accent": "oklch(0.85 0.16 85)",
+      "--accent-foreground": "oklch(0.13 0.02 260)",
+      "--border": "rgba(225, 29, 72, 0.25)",
+      "--ring": "oklch(0.60 0.22 20)",
+      "--gold": "oklch(0.85 0.16 85)",
+      "--gold-foreground": "oklch(0.13 0.02 260)",
+      "--teal": "oklch(0.68 0.20 20)",
+      "--signal": "oklch(0.60 0.22 20)",
+    },
+  },
+  sunset_amber: {
+    id: "sunset_amber",
+    name: "Sunset Amber",
+    subtitle: "Burnt Amber & Coral Glow",
+    primaryAccent: "#F59E0B",
+    secondaryAccent: "#F97316",
+    bg: "#140D0B",
+    surface: "#221713",
+    text: "#FFFBEB",
+    liveColor: "#FBBF24",
+    cssVars: {
+      "--theme-primary": "#F59E0B",
+      "--theme-secondary": "#F97316",
+      "--theme-accent": "#FBBF24",
+      "--theme-background": "#140D0B",
+      "--theme-surface": "#221713",
+      "--theme-surface-elevated": "#2D1F1A",
+      "--theme-border": "rgba(245, 158, 11, 0.25)",
+      "--theme-text": "#FFFBEB",
+      "--theme-muted": "#A8988B",
+      "--theme-glow": "rgba(245, 158, 11, 0.30)",
+      "--theme-primary-glow": "rgba(245, 158, 11, 0.20)",
+      "--theme-secondary-glow": "rgba(249, 115, 22, 0.15)",
+      "--theme-radar": "#F59E0B",
+      "--theme-chart": "#FB923C",
+      "--theme-button": "#D97706",
+      "--background": "oklch(0.12 0.03 40)",
+      "--foreground": "oklch(0.97 0.01 50)",
+      "--card": "oklch(0.16 0.03 40)",
+      "--card-foreground": "oklch(0.97 0.01 50)",
+      "--primary": "oklch(0.75 0.18 65)",
+      "--primary-foreground": "oklch(0.12 0.03 40)",
+      "--secondary": "oklch(0.20 0.03 40)",
+      "--secondary-foreground": "oklch(0.97 0.01 50)",
+      "--muted": "oklch(0.18 0.03 40)",
+      "--muted-foreground": "oklch(0.70 0.03 50)",
+      "--accent": "oklch(0.70 0.20 40)",
+      "--accent-foreground": "oklch(0.12 0.03 40)",
+      "--border": "rgba(245, 158, 11, 0.25)",
+      "--ring": "oklch(0.75 0.18 65)",
+      "--gold": "oklch(0.80 0.18 70)",
+      "--gold-foreground": "oklch(0.12 0.03 40)",
+      "--teal": "oklch(0.72 0.19 50)",
+      "--signal": "oklch(0.75 0.18 65)",
+    },
+  },
+  burgundy_gold: {
+    id: "burgundy_gold",
+    name: "Burgundy Gold",
+    subtitle: "Rich Burgundy & Antique Gold",
+    primaryAccent: "#9F1239",
+    secondaryAccent: "#EAB308",
+    bg: "#1A090D",
+    surface: "#221015",
+    text: "#FAF0E6",
+    liveColor: "#EAB308",
+    cssVars: {
+      "--theme-primary": "#9F1239",
+      "--theme-secondary": "#EAB308",
+      "--theme-accent": "#F43F5E",
+      "--theme-background": "#1A090D",
+      "--theme-surface": "#221015",
+      "--theme-surface-elevated": "#2F171E",
+      "--theme-border": "rgba(234, 179, 8, 0.25)",
+      "--theme-text": "#FAF0E6",
+      "--theme-muted": "#A68A91",
+      "--theme-glow": "rgba(159, 18, 57, 0.30)",
+      "--theme-primary-glow": "rgba(159, 18, 57, 0.20)",
+      "--theme-secondary-glow": "rgba(234, 179, 8, 0.15)",
+      "--theme-radar": "#EAB308",
+      "--theme-chart": "#F43F5E",
+      "--theme-button": "#881337",
+      "--background": "oklch(0.12 0.03 15)",
+      "--foreground": "oklch(0.96 0.02 50)",
+      "--card": "oklch(0.16 0.03 15)",
+      "--card-foreground": "oklch(0.96 0.02 50)",
+      "--primary": "oklch(0.75 0.16 85)",
+      "--primary-foreground": "oklch(0.12 0.03 15)",
+      "--secondary": "oklch(0.20 0.03 15)",
+      "--secondary-foreground": "oklch(0.96 0.02 50)",
+      "--muted": "oklch(0.18 0.03 15)",
+      "--muted-foreground": "oklch(0.70 0.02 45)",
+      "--accent": "oklch(0.55 0.22 15)",
+      "--accent-foreground": "oklch(0.96 0.02 50)",
+      "--border": "rgba(234, 179, 8, 0.25)",
+      "--ring": "oklch(0.75 0.16 85)",
+      "--gold": "oklch(0.78 0.16 85)",
+      "--gold-foreground": "oklch(0.12 0.03 15)",
+      "--teal": "oklch(0.65 0.20 15)",
+      "--signal": "oklch(0.78 0.16 85)",
+    },
+  },
+  aurora_purple: {
+    id: "aurora_purple",
+    name: "Aurora Purple",
+    subtitle: "Deep Violet & Neon Cyan",
+    primaryAccent: "#A855F7",
+    secondaryAccent: "#22D3EE",
+    bg: "#0F0B1E",
+    surface: "#1A1330",
+    text: "#FAF5FF",
+    liveColor: "#22D3EE",
+    cssVars: {
+      "--theme-primary": "#A855F7",
+      "--theme-secondary": "#22D3EE",
+      "--theme-accent": "#EC4899",
+      "--theme-background": "#0F0B1E",
+      "--theme-surface": "#1A1330",
+      "--theme-surface-elevated": "#251C42",
+      "--theme-border": "rgba(168, 85, 247, 0.25)",
+      "--theme-text": "#FAF5FF",
+      "--theme-muted": "#938BB8",
+      "--theme-glow": "rgba(168, 85, 247, 0.30)",
+      "--theme-primary-glow": "rgba(168, 85, 247, 0.20)",
+      "--theme-secondary-glow": "rgba(34, 211, 238, 0.15)",
+      "--theme-radar": "#A855F7",
+      "--theme-chart": "#22D3EE",
+      "--theme-button": "#9333EA",
+      "--background": "oklch(0.12 0.04 290)",
+      "--foreground": "oklch(0.97 0.01 290)",
+      "--card": "oklch(0.16 0.04 290)",
+      "--card-foreground": "oklch(0.97 0.01 290)",
+      "--primary": "oklch(0.68 0.24 300)",
+      "--primary-foreground": "oklch(0.97 0.01 290)",
+      "--secondary": "oklch(0.20 0.03 290)",
+      "--secondary-foreground": "oklch(0.97 0.01 290)",
+      "--muted": "oklch(0.18 0.03 290)",
+      "--muted-foreground": "oklch(0.72 0.03 290)",
+      "--accent": "oklch(0.78 0.16 200)",
+      "--accent-foreground": "oklch(0.12 0.04 290)",
+      "--border": "rgba(168, 85, 247, 0.25)",
+      "--ring": "oklch(0.68 0.24 300)",
+      "--gold": "oklch(0.75 0.18 310)",
+      "--gold-foreground": "oklch(0.12 0.04 290)",
+      "--teal": "oklch(0.78 0.16 200)",
+      "--signal": "oklch(0.68 0.24 300)",
+    },
+  },
+  midnight_teal: {
+    id: "midnight_teal",
+    name: "Midnight Teal",
+    subtitle: "Deep Navy & Champagne Teal",
+    primaryAccent: "#14B8A6",
+    secondaryAccent: "#38BDF8",
+    bg: "#0A1128",
+    surface: "#131B33",
+    text: "#F8F9FA",
+    liveColor: "#14B8A6",
+    cssVars: {
+      "--theme-primary": "#14B8A6",
+      "--theme-secondary": "#38BDF8",
+      "--theme-accent": "#54D6C2",
+      "--theme-background": "#0A1128",
+      "--theme-surface": "#131B33",
+      "--theme-surface-elevated": "#1B2647",
+      "--theme-border": "rgba(20, 184, 166, 0.25)",
+      "--theme-text": "#F8F9FA",
+      "--theme-muted": "#8294B0",
+      "--theme-glow": "rgba(20, 184, 166, 0.30)",
+      "--theme-primary-glow": "rgba(20, 184, 166, 0.20)",
+      "--theme-secondary-glow": "rgba(56, 189, 248, 0.15)",
+      "--theme-radar": "#14B8A6",
+      "--theme-chart": "#38BDF8",
+      "--theme-button": "#0D9488",
+      "--background": "oklch(0.12 0.03 250)",
+      "--foreground": "oklch(0.97 0.01 220)",
+      "--card": "oklch(0.16 0.03 250)",
+      "--card-foreground": "oklch(0.97 0.01 220)",
+      "--primary": "oklch(0.78 0.13 185)",
+      "--primary-foreground": "oklch(0.12 0.03 250)",
+      "--secondary": "oklch(0.20 0.03 250)",
+      "--secondary-foreground": "oklch(0.97 0.01 220)",
+      "--muted": "oklch(0.18 0.03 250)",
+      "--muted-foreground": "oklch(0.72 0.03 240)",
+      "--accent": "oklch(0.78 0.14 210)",
+      "--accent-foreground": "oklch(0.12 0.03 250)",
+      "--border": "rgba(20, 184, 166, 0.25)",
+      "--ring": "oklch(0.78 0.13 185)",
+      "--gold": "oklch(0.78 0.14 210)",
+      "--gold-foreground": "oklch(0.12 0.03 250)",
+      "--teal": "oklch(0.78 0.13 185)",
+      "--signal": "oklch(0.78 0.13 185)",
+    },
+  },
+  oceanic_blue: {
+    id: "oceanic_blue",
+    name: "Oceanic Blue",
+    subtitle: "Royal Sapphire & Icy Cyan",
+    primaryAccent: "#2563EB",
+    secondaryAccent: "#38BDF8",
+    bg: "#08101F",
+    surface: "#101D33",
+    text: "#F0F9FF",
+    liveColor: "#38BDF8",
+    cssVars: {
+      "--theme-primary": "#2563EB",
+      "--theme-secondary": "#38BDF8",
+      "--theme-accent": "#60A5FA",
+      "--theme-background": "#08101F",
+      "--theme-surface": "#101D33",
+      "--theme-surface-elevated": "#182A48",
+      "--theme-border": "rgba(56, 189, 248, 0.25)",
+      "--theme-text": "#F0F9FF",
+      "--theme-muted": "#86A2C7",
+      "--theme-glow": "rgba(37, 99, 235, 0.30)",
+      "--theme-primary-glow": "rgba(37, 99, 235, 0.20)",
+      "--theme-secondary-glow": "rgba(56, 189, 248, 0.15)",
+      "--theme-radar": "#2563EB",
+      "--theme-chart": "#38BDF8",
+      "--theme-button": "#1D4ED8",
+      "--background": "oklch(0.11 0.03 240)",
+      "--foreground": "oklch(0.97 0.01 240)",
+      "--card": "oklch(0.15 0.03 240)",
+      "--card-foreground": "oklch(0.97 0.01 240)",
+      "--primary": "oklch(0.72 0.15 230)",
+      "--primary-foreground": "oklch(0.11 0.03 240)",
+      "--secondary": "oklch(0.19 0.03 240)",
+      "--secondary-foreground": "oklch(0.97 0.01 240)",
+      "--muted": "oklch(0.17 0.03 240)",
+      "--muted-foreground": "oklch(0.70 0.03 240)",
+      "--accent": "oklch(0.78 0.15 220)",
+      "--accent-foreground": "oklch(0.11 0.03 240)",
+      "--border": "rgba(56, 189, 248, 0.25)",
+      "--ring": "oklch(0.72 0.15 230)",
+      "--gold": "oklch(0.78 0.15 220)",
+      "--gold-foreground": "oklch(0.11 0.03 240)",
+      "--teal": "oklch(0.78 0.15 220)",
+      "--signal": "oklch(0.72 0.15 230)",
+    },
+  },
+  emerald_signal: {
+    id: "emerald_signal",
+    name: "Emerald Signal",
+    subtitle: "Deep Emerald & Mint Glow",
+    primaryAccent: "#059669",
+    secondaryAccent: "#34D399",
+    bg: "#061510",
+    surface: "#0F241C",
+    text: "#ECFDF5",
+    liveColor: "#34D399",
+    cssVars: {
+      "--theme-primary": "#059669",
+      "--theme-secondary": "#34D399",
+      "--theme-accent": "#6EE7B7",
+      "--theme-background": "#061510",
+      "--theme-surface": "#0F241C",
+      "--theme-surface-elevated": "#18352A",
+      "--theme-border": "rgba(52, 211, 153, 0.25)",
+      "--theme-text": "#ECFDF5",
+      "--theme-muted": "#78A391",
+      "--theme-glow": "rgba(5, 150, 105, 0.30)",
+      "--theme-primary-glow": "rgba(5, 150, 105, 0.20)",
+      "--theme-secondary-glow": "rgba(52, 211, 153, 0.15)",
+      "--theme-radar": "#059669",
+      "--theme-chart": "#34D399",
+      "--theme-button": "#047857",
+      "--background": "oklch(0.11 0.03 165)",
+      "--foreground": "oklch(0.97 0.01 165)",
+      "--card": "oklch(0.15 0.03 165)",
+      "--card-foreground": "oklch(0.97 0.01 165)",
+      "--primary": "oklch(0.75 0.17 160)",
+      "--primary-foreground": "oklch(0.11 0.03 165)",
+      "--secondary": "oklch(0.19 0.03 165)",
+      "--secondary-foreground": "oklch(0.97 0.01 165)",
+      "--muted": "oklch(0.18 0.03 165)",
+      "--muted-foreground": "oklch(0.70 0.03 165)",
+      "--accent": "oklch(0.80 0.15 160)",
+      "--accent-foreground": "oklch(0.11 0.03 165)",
+      "--border": "rgba(52, 211, 153, 0.25)",
+      "--ring": "oklch(0.75 0.17 160)",
+      "--gold": "oklch(0.80 0.15 160)",
+      "--gold-foreground": "oklch(0.11 0.03 165)",
+      "--teal": "oklch(0.80 0.15 160)",
+      "--signal": "oklch(0.75 0.17 160)",
+    },
+  },
+}
+
+/**
+ * Normalizes theme IDs supporting both hyphenated ("forest-couture") and underscored ("forest_couture") formats.
+ * CRITICAL RULE: If an invalid ID occurs, fall back to "imperial_ruby", NOT Midnight Teal.
+ */
+export function normalizeThemeId(rawId: string | null | undefined): ThemePaletteId {
+  if (!rawId) return "imperial_ruby"
+  const normalized = rawId.replace(/-/g, "_") as ThemePaletteId
+  if (THEME_PALETTES[normalized]) {
+    return normalized
+  }
+  return "imperial_ruby"
+}
+
+export function applyTheme(paletteId: string) {
+  if (typeof document === "undefined") return
+  const id = normalizeThemeId(paletteId)
+  const palette = THEME_PALETTES[id]
+  const root = document.documentElement
+
+  root.setAttribute("data-theme", id.replace(/_/g, "-"))
+
+  Object.entries(palette.cssVars).forEach(([key, val]) => {
+    root.style.setProperty(key, val)
+  })
+
+  try {
+    localStorage.setItem("shelfguard_theme", id)
+  } catch {
+    // Ignore storage issues
+  }
+}

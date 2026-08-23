@@ -131,7 +131,9 @@ export function ProductIntelligence({ id }: { id: string }) {
                 Cross-Marketplace Price & Stock Comparison
               </CardTitle>
               <CardDescription className="text-xs">
-                Real-time price spread across Amazon, Flipkart, Myntra, Meesho & Purplle.
+                Real-time price spread across Amazon, Flipkart & Myntra.
+
+
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">

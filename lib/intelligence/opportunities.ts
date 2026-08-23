@@ -8,6 +8,7 @@ import type {
 /**
  * Pure function: Detects opportunity signals strictly across LIVE marketplace product offers (isLive === true).
  * Non-live or fallback offers are completely ignored.
+ * Evaluates 6 core rules dynamically across N active marketplaces (Amazon, Flipkart, Myntra, Meesho, Purplle).
  */
 export function detectOpportunities(
   offers: MarketplaceProduct[],
@@ -34,7 +35,7 @@ export function detectOpportunities(
         description: `${cheapestOffer.marketplace.toUpperCase()} is listed at ₹${cheapestOffer.price.toLocaleString()} vs ₹${highestOffer.price.toLocaleString()} on ${highestOffer.marketplace.toUpperCase()}.`,
         evidence: `${priceSummary.priceSpreadPercentage}% price gap (${highestOffer.marketplace.toUpperCase()} ₹${highestOffer.price.toLocaleString()} → ${cheapestOffer.marketplace.toUpperCase()} ₹${cheapestOffer.price.toLocaleString()})`,
         recommendedAction: `Review pricing on ${highestOffer.marketplace.toUpperCase()} to protect buy-box share.`,
-        impact: `Reclaim up to 18% lost conversions from ${cheapestOffer.marketplace.toUpperCase()}.`,
+        impact: `Reclaim channel conversions on ${cheapestOffer.marketplace.toUpperCase()}.`,
         score: Math.min(95, Math.round(70 + priceSummary.priceSpreadPercentage)),
         marketplace: cheapestOffer.marketplace,
         detectedAt: now,
@@ -71,8 +72,8 @@ export function detectOpportunities(
       title: `Competitor Stockout Detected on ${outMarketplace.toUpperCase()}`,
       description: `Primary listing on ${outMarketplace.toUpperCase()} is out of stock while other live channels remain available.`,
       evidence: `Confirmed stockout on ${outMarketplace.toUpperCase()}.`,
-      recommendedAction: `Increase ad spend and search visibility on active channels to capture displaced buyers.`,
-      impact: `Capture up to +24% incremental demand during competitor stockout.`,
+      recommendedAction: `Increase search visibility on active channels to capture displaced buyers.`,
+      impact: `Capture demand during competitor stockout on ${outMarketplace.toUpperCase()}.`,
       score: 88,
       marketplace: outMarketplace,
       detectedAt: now,
@@ -103,6 +104,44 @@ export function detectOpportunities(
         })
       }
     }
+  }
+
+  // Rule 5: LOW_STOCK warning
+  for (const offer of liveOffers) {
+    if (offer.stockStatus === "low_stock") {
+      signals.push({
+        id: `opp-lowstock-${offer.marketplace}-${Date.now()}`,
+        rule: "LOW_STOCK",
+        severity: "medium",
+        title: `Low Stock Warning on ${offer.marketplace.toUpperCase()}`,
+        description: `Inventory level is low for listing on ${offer.marketplace.toUpperCase()}.`,
+        evidence: `Low stock status flagged on live PDP.`,
+        recommendedAction: `Prepare replenishment shipments to prevent out-of-stock signal.`,
+        impact: `Maintain Buy Box eligibility on ${offer.marketplace.toUpperCase()}.`,
+        score: 75,
+        marketplace: offer.marketplace,
+        detectedAt: now,
+        isLive: true,
+      })
+    }
+  }
+
+  // Rule 6: COMPETITIVE_MOVEMENT across 3+ channels
+  if (liveOffers.length >= 3) {
+    signals.push({
+      id: `opp-movement-multi-${Date.now()}`,
+      rule: "COMPETITIVE_MOVEMENT",
+      severity: "info" as unknown as "low",
+      title: `Multi-Marketplace Alignment Across ${liveOffers.length} Channels`,
+      description: `Real-time pricing data synchronized across ${liveOffers.map((l) => l.marketplace.toUpperCase()).join(", ")}.`,
+      evidence: `${liveOffers.length} active live channels tracked.`,
+      recommendedAction: `Maintain automated price tracking across all active marketplaces.`,
+      impact: `360-degree competitive marketplace visibility.`,
+      score: 70,
+      marketplace: priceSummary.cheapestMarketplace,
+      detectedAt: now,
+      isLive: true,
+    })
   }
 
   return signals
