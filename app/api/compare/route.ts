@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { executeBrightDataScrape } from "@/lib/brightdata/client"
-import { scrapeFlipkartProduct } from "@/lib/brightdata/flipkart"
+import { scrapeFlipkartProduct, isFlipkartUrl } from "@/lib/brightdata/flipkart"
 import {
   compareMarketplacePrices,
   compareStockStatus,
@@ -18,7 +18,7 @@ export async function POST(req: Request) {
 
     let amazonOffer: MarketplaceProduct
     let isAmazonLive = false
-    let amazonWarning: string | null = null
+    let amazonError: string | null = null
 
     // 1. Live Amazon Extraction via existing DCA Scraper
     try {
@@ -27,36 +27,28 @@ export async function POST(req: Request) {
         amazonOffer = normalizeShelfGuardProduct(amazonScrapeRes.data[0], true)
         isAmazonLive = true
       } else {
-        throw new Error("Amazon live scrape returned 0 items.")
+        throw new Error("Bright Data Amazon scraper returned zero product records.")
       }
     } catch (err) {
-      amazonWarning = err instanceof Error ? err.message : String(err)
-      console.warn(`[API Compare] Amazon live scrape fallback: ${amazonWarning}`)
+      amazonError = err instanceof Error ? err.message : String(err)
+      console.warn(`[API Compare] Amazon extraction warning: ${amazonError}`)
+      // Explicit fallback labeled isLive: false
       amazonOffer = normalizeShelfGuardProduct(products[0], false)
     }
 
-    // 2. Live Flipkart Extraction via new Datasets v3 Scraper
+    // 2. Live Flipkart Extraction via Datasets v3 Scraper
     let flipkartOffer: MarketplaceProduct
     let isFlipkartLive = false
-    let flipkartWarning: string | null = null
+    let flipkartError: string | null = null
 
     if (flipkartUrl) {
-      try {
-        const flipkartScrapeRes = await scrapeFlipkartProduct(flipkartUrl)
-        if (flipkartScrapeRes.product) {
-          flipkartOffer = flipkartScrapeRes.product
-          isFlipkartLive = true
-        } else {
-          throw new Error("Flipkart Datasets API returned no product record.")
-        }
-      } catch (err) {
-        flipkartWarning = err instanceof Error ? err.message : String(err)
-        console.warn(`[API Compare] Flipkart live scrape fallback: ${flipkartWarning}`)
+      if (!isFlipkartUrl(flipkartUrl)) {
+        flipkartError = "Provided URL is not a valid flipkart.com product URL."
         flipkartOffer = {
           marketplace: "flipkart",
           productName: amazonOffer.productName,
           brand: amazonOffer.brand,
-          productId: `FK-FALLBACK-${amazonOffer.productId}`,
+          productId: `FK-INVALID`,
           price: Math.round(amazonOffer.price * 0.94),
           originalPrice: amazonOffer.originalPrice,
           currency: "INR",
@@ -64,18 +56,47 @@ export async function POST(req: Request) {
           rating: 4.4,
           reviewCount: 156,
           imageUrl: null,
-          productUrl: flipkartUrl || "https://www.flipkart.com",
+          productUrl: flipkartUrl,
           lastChecked: new Date().toISOString(),
           isLive: false,
         }
+      } else {
+        try {
+          const flipkartScrapeRes = await scrapeFlipkartProduct(flipkartUrl)
+          if (flipkartScrapeRes.product) {
+            flipkartOffer = flipkartScrapeRes.product
+            isFlipkartLive = true
+          } else {
+            throw new Error("Flipkart Datasets API returned no product record.")
+          }
+        } catch (err) {
+          flipkartError = err instanceof Error ? err.message : String(err)
+          console.warn(`[API Compare] Flipkart extraction error: ${flipkartError}`)
+          flipkartOffer = {
+            marketplace: "flipkart",
+            productName: amazonOffer.productName,
+            brand: amazonOffer.brand,
+            productId: `FK-ERROR`,
+            price: Math.round(amazonOffer.price * 0.94),
+            originalPrice: amazonOffer.originalPrice,
+            currency: "INR",
+            stockStatus: "in_stock",
+            rating: 4.4,
+            reviewCount: 156,
+            imageUrl: null,
+            productUrl: flipkartUrl,
+            lastChecked: new Date().toISOString(),
+            isLive: false,
+          }
+        }
       }
     } else {
-      // Demo Flipkart offer if no URL supplied
+      // Demo Flipkart offer when no URL supplied
       flipkartOffer = {
         marketplace: "flipkart",
         productName: amazonOffer.productName,
         brand: amazonOffer.brand,
-        productId: `FK-DEMO-${amazonOffer.productId}`,
+        productId: `FK-UNCONNECTED-${amazonOffer.productId}`,
         price: Math.round(amazonOffer.price * 0.94),
         originalPrice: amazonOffer.originalPrice,
         currency: "INR",
@@ -91,7 +112,7 @@ export async function POST(req: Request) {
 
     const offers: MarketplaceProduct[] = [amazonOffer, flipkartOffer]
 
-    // 3. Competitive Intelligence Comparison
+    // 3. Normalized Competitive Intelligence Comparison
     const priceSummary = compareMarketplacePrices(offers)
     const stockSummary = compareStockStatus(offers)
     const opportunities = detectOpportunities(offers, priceSummary, stockSummary)
@@ -101,15 +122,20 @@ export async function POST(req: Request) {
       amazon: {
         ...amazonOffer,
         isLive: isAmazonLive,
-        warning: amazonWarning,
+        error: amazonError,
       },
       flipkart: {
         ...flipkartOffer,
         isLive: isFlipkartLive,
-        warning: flipkartWarning,
+        error: flipkartError,
       },
       comparison: {
-        priceSummary,
+        lowestPrice: priceSummary.lowestPrice,
+        highestPrice: priceSummary.highestPrice,
+        priceDifference: priceSummary.priceSpread,
+        priceSpreadPercentage: priceSummary.priceSpreadPercentage,
+        cheapestMarketplace: priceSummary.cheapestMarketplace,
+        mostExpensiveMarketplace: priceSummary.mostExpensiveMarketplace,
         stockSummary,
       },
       opportunities,
@@ -125,3 +151,4 @@ export async function POST(req: Request) {
     )
   }
 }
+
