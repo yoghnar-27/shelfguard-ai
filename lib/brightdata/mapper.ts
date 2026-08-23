@@ -111,11 +111,56 @@ export function parseBrightDataStockStatus(
 }
 
 /**
+ * Recursively searches any object/array payload for a valid numeric price > 0.
+ */
+export function findAnyPriceInObject(obj: unknown, depth = 0): number {
+  if (depth > 4 || !obj) return 0
+  if (typeof obj === "number" && !Number.isNaN(obj) && obj > 0 && obj < 5000000) {
+    return obj
+  }
+  if (typeof obj === "string") {
+    const p = parseBrightDataPrice(obj)
+    if (p > 0) return p
+  }
+  if (Array.isArray(obj)) {
+    for (const item of obj) {
+      const p = findAnyPriceInObject(item, depth + 1)
+      if (p > 0) return p
+    }
+  }
+  if (typeof obj === "object" && obj !== null) {
+    const rec = obj as Record<string, unknown>
+    // 1. First priority: keys containing price, amount, value, mrp, cost, offer, buy
+    for (const [key, val] of Object.entries(rec)) {
+      const lkey = key.toLowerCase()
+      if (
+        lkey.includes("price") ||
+        lkey.includes("amount") ||
+        lkey.includes("value") ||
+        lkey.includes("mrp") ||
+        lkey.includes("cost") ||
+        lkey.includes("offer") ||
+        lkey.includes("buy")
+      ) {
+        const p = parseBrightDataPrice(val) || findAnyPriceInObject(val, depth + 1)
+        if (p > 0) return p
+      }
+    }
+    // 2. Secondary priority: any key
+    for (const [, val] of Object.entries(rec)) {
+      const p = findAnyPriceInObject(val, depth + 1)
+      if (p > 0) return p
+    }
+  }
+  return 0
+}
+
+/**
  * Converts a raw Bright Data extracted item into ShelfGuard's Product domain model.
  * Inspects all common field variations returned by Bright Data Amazon scrapers.
  */
 export function mapBrightDataToShelfGuardProduct(raw: BrightDataProduct): Product {
-  // Temporary safe server-side diagnostic logging (with API key redacted)
+  // Safe server-side diagnostic logging (with API key redacted)
   console.log(`[Amazon BrightData Mapper] Raw record keys:`, Object.keys(raw))
   if (raw.price || raw.current_price || raw.final_price || raw.buybox_price) {
     console.log(`[Amazon BrightData Mapper] Extracted price fields:`, {
@@ -130,7 +175,7 @@ export function mapBrightDataToShelfGuardProduct(raw: BrightDataProduct): Produc
     })
   }
 
-  const currentPrice =
+  const explicitPrice =
     parseBrightDataPrice(raw.current_price) ||
     parseBrightDataPrice(raw.price) ||
     parseBrightDataPrice(raw.final_price) ||
@@ -155,6 +200,8 @@ export function mapBrightDataToShelfGuardProduct(raw: BrightDataProduct): Produc
     parseBrightDataPrice(raw.buy_box) ||
     parseBrightDataPrice(raw.offers) ||
     parseBrightDataPrice(raw.prices)
+
+  const currentPrice = explicitPrice > 0 ? explicitPrice : findAnyPriceInObject(raw)
 
   const originalPrice =
     parseBrightDataPrice(raw.original_price) ||
