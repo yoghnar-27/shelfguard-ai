@@ -4,7 +4,6 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
   Box,
-  HeartPulse,
   LayoutDashboard,
   Sparkles,
 } from "lucide-react"
@@ -16,8 +15,6 @@ const primaryNav = [
   { href: "/products", label: "Products", icon: Box },
   { href: "/opportunities", label: "Opportunities", icon: Sparkles },
 ]
-
-const secondaryNav: Array<{ href: string; label: string; icon: typeof HeartPulse }> = []
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname()
@@ -63,32 +60,6 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                   )}
                   aria-hidden
                 />
-                <span className="truncate">{item.label}</span>
-              </Link>
-            )
-          })}
-        </div>
-
-        <div className="space-y-1 pt-2 border-t border-sidebar-border/50">
-          <p className="px-3 text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-1">
-            System
-          </p>
-          {secondaryNav.map((item) => {
-            const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={onNavigate}
-                aria-current={active ? "page" : undefined}
-                className={cn(
-                  "group relative flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-medium tracking-wide transition-all duration-200",
-                  active
-                    ? "bg-teal/10 text-teal"
-                    : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground"
-                )}
-              >
-                <item.icon className="size-4 shrink-0" aria-hidden />
                 <span className="truncate">{item.label}</span>
               </Link>
             )

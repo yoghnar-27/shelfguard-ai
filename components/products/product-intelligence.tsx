@@ -50,7 +50,6 @@ export function ProductIntelligence({ id }: { id: string }) {
     )
   }
 
-  const history = getPriceHistory(product.id)
   const stock = getStockHistory(product.id)
   const detected = getProductChanges(product.id)
   const opps = getProductOpportunities(product.id)
