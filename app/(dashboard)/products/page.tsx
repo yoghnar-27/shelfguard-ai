@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { PageHeader } from "@/components/dashboard/page-header"
 import { LiveProductManager } from "@/components/products/live-product-manager"
+import { LiveComparisonManager } from "@/components/products/live-comparison-manager"
 import { ProductGrid } from "@/components/products/product-grid"
 import type { Product } from "@/lib/mock/types"
 
@@ -17,8 +18,10 @@ export default function ProductsPage() {
         description="Monitor competitor SKUs across Indian marketplaces with live Bright Data extraction and real-time parameter tracking."
       />
       <LiveProductManager onLiveProductLoaded={setLiveProduct} />
+      <LiveComparisonManager />
       <ProductGrid liveProduct={liveProduct} />
     </div>
   )
 }
+
 

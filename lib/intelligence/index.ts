@@ -1,7 +1,11 @@
 import type { Product } from "@/lib/mock/types"
 import { compareMarketplacePrices, compareStockStatus } from "./comparison"
 import { detectOpportunities } from "./opportunities"
+import { normalizeShelfGuardProduct } from "./normalizer"
 import type { CompetitiveComparison, MarketplaceProduct } from "./types"
+
+
+
 
 
 export * from "./types"
