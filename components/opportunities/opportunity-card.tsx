@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { toast } from "sonner"
-import { ChevronDown } from "lucide-react"
+import { ChevronDown, ExternalLink, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { LinkButton } from "@/components/dashboard/link-button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -21,9 +21,9 @@ import type { Opportunity } from "@/lib/mock/types"
 
 function severityClass(severity: Opportunity["severity"]) {
   if (severity === "high" || severity === "critical") {
-    return "border-signal/30 bg-signal/10 text-signal"
+    return "border-signal/40 bg-signal/10 text-signal shadow-[0_0_12px_oklch(0.68_0.18_25_/_0.2)]"
   }
-  if (severity === "medium") return "border-gold/30 bg-gold/10 text-gold"
+  if (severity === "medium") return "border-gold/40 bg-gold/10 text-gold shadow-[0_0_12px_oklch(0.84_0.14_85_/_0.2)]"
   return "border-border bg-muted/50 text-muted-foreground"
 }
 
@@ -36,83 +36,106 @@ export function OpportunityCard({
 }) {
   const [open, setOpen] = useState(defaultOpen)
   const [drawer, setDrawer] = useState(false)
+  const isHighPriority = opportunity.severity === "high" || opportunity.severity === "critical"
 
   return (
     <>
-      <Card className="card-hover hairline hover:bg-muted/10">
+      <Card
+        className={cn(
+          "card-hover hairline relative overflow-hidden transition-all duration-300 hover:border-gold/30 hover:bg-card/90",
+          isHighPriority && "pulse-subtle border-signal/30"
+        )}
+      >
         <CardContent className="space-y-4">
-          <div className="flex items-start gap-4">
+          <div className="flex items-start justify-between gap-4">
             <button
               type="button"
-              className="min-w-0 flex-1 text-left focus-visible:rounded-md"
+              className="group min-w-0 flex-1 text-left focus-visible:rounded-md"
               aria-expanded={open}
               aria-controls={`opp-${opportunity.id}-detail`}
               onClick={() => setOpen((v) => !v)}
             >
-              <span
-                className={cn(
-                  "inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-[0.14em] uppercase",
-                  severityClass(opportunity.severity)
-                )}
-              >
-                {opportunity.severity} priority
-              </span>
-              <p className="mt-2 font-heading text-base tracking-tight">
+              <div className="flex items-center gap-2">
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-semibold tracking-wider uppercase",
+                    severityClass(opportunity.severity)
+                  )}
+                >
+                  <Sparkles className="size-3" />
+                  {opportunity.severity} priority
+                </span>
+              </div>
+              <p className="mt-2 font-heading text-base font-semibold tracking-tight text-foreground group-hover:text-gold transition-colors">
                 {opportunity.productName}
               </p>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="mt-1 text-xs text-muted-foreground">
                 {opportunity.competitor} · {opportunity.event.replace("went ", "")}
               </p>
             </button>
             <ScoreRing score={opportunity.score} />
           </div>
 
-          <dl className="grid grid-cols-2 gap-3 text-sm">
+          <dl className="grid grid-cols-2 gap-3 rounded-xl border border-border/50 bg-background/40 p-3 text-xs">
             <div>
-              <dt className="text-[11px] tracking-wide text-muted-foreground uppercase">
+              <dt className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
                 Estimated impact
               </dt>
-              <dd className="mt-0.5 font-medium">{opportunity.impact}</dd>
+              <dd className="mt-1 font-medium text-foreground">{opportunity.impact}</dd>
             </div>
             <div>
-              <dt className="text-[11px] tracking-wide text-muted-foreground uppercase">
+              <dt className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
                 Opportunity score
               </dt>
-              <dd className="mt-0.5 font-medium tabular-nums">{opportunity.score} / 100</dd>
+              <dd className="mt-1 font-mono font-medium tabular-nums text-gold">{opportunity.score} / 100</dd>
             </div>
           </dl>
 
-          <div id={`opp-${opportunity.id}-detail`} hidden={!open}>
-            <div className="space-y-3 border-t border-border/70 pt-3">
+          <div
+            id={`opp-${opportunity.id}-detail`}
+            className={cn(
+              "grid transition-all duration-300 ease-in-out",
+              open ? "grid-rows-[1fr] opacity-100 pt-1" : "grid-rows-[0fr] opacity-0 overflow-hidden"
+            )}
+          >
+            <div className="overflow-hidden space-y-3 border-t border-border/60 pt-3">
               <div>
-                <p className="text-[11px] tracking-wide text-muted-foreground uppercase">
+                <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
                   Recommended action
                 </p>
-                <p className="mt-1 text-sm leading-relaxed">“{opportunity.action}”</p>
+                <p className="mt-1 text-xs leading-relaxed text-foreground font-medium bg-muted/30 p-2.5 rounded-lg border border-border/40">
+                  “{opportunity.action}”
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground">{opportunity.window}</p>
+              <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                <span className="size-1.5 rounded-full bg-gold" />
+                {opportunity.window}
+              </p>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <Button size="sm" onClick={() => setDrawer(true)}>
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <Button size="sm" onClick={() => setDrawer(true)} className="bg-gold text-gold-foreground hover:bg-gold/90">
               Review opportunity
             </Button>
             <LinkButton size="sm" variant="outline" href={`/products/${opportunity.productId}`}>
               Open product
+              <ExternalLink className="ml-1 size-3" />
             </LinkButton>
             <Button
               size="sm"
               variant="ghost"
               aria-expanded={open}
               onClick={() => setOpen((v) => !v)}
+              className="text-xs text-muted-foreground hover:text-foreground"
             >
               {open ? "Hide detail" : "Show detail"}
-              <ChevronDown className={cn("transition-transform", open && "rotate-180")} />
+              <ChevronDown className={cn("ml-1 size-3.5 transition-transform duration-200", open && "rotate-180")} />
             </Button>
           </div>
         </CardContent>
       </Card>
+
       <OpportunityDrawer
         opportunity={opportunity}
         open={drawer}
@@ -133,50 +156,57 @@ export function OpportunityDrawer({
 }) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-md">
+      <SheetContent className="sm:max-w-md bg-card border-border/80">
         <SheetHeader>
-          <SheetTitle>Opportunity intelligence</SheetTitle>
-          <SheetDescription>
-            Demo recommendation from mock competitor changes. Not a live pricing model.
+          <SheetTitle className="font-heading text-lg">Opportunity Intelligence</SheetTitle>
+          <SheetDescription className="text-xs">
+            Evaluated recommendation based on detected market changes. (Simulation Mode)
           </SheetDescription>
         </SheetHeader>
-        <div className="flex items-start justify-between gap-4 px-4">
-          <div className="space-y-3 text-sm">
-            <div>
-              <p className="text-xs text-muted-foreground">Competitor</p>
-              <p className="font-medium">{opportunity.competitor}</p>
+        <div className="my-4 space-y-4 px-1">
+          <div className="flex items-start justify-between gap-4 rounded-xl border border-border/60 bg-muted/20 p-4">
+            <div className="space-y-3 text-xs">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Competitor</p>
+                <p className="font-medium text-foreground">{opportunity.competitor}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Product</p>
+                <p className="font-medium text-foreground">{opportunity.productName}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Detected event</p>
+                <p className="font-medium text-teal">{opportunity.event}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Product</p>
-              <p className="font-medium">{opportunity.productName}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Detected event</p>
-              <p className="font-medium">{opportunity.event}</p>
-            </div>
+            <ScoreRing score={opportunity.score} />
           </div>
-          <ScoreRing score={opportunity.score} />
+
+          <div className="rounded-xl border border-gold/30 bg-gold/5 p-4 space-y-2">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-gold">Recommended Strategy</p>
+            <p className="text-sm font-medium leading-relaxed text-foreground">“{opportunity.action}”</p>
+            <p className="text-xs text-muted-foreground pt-1 border-t border-gold/15">{formatDateTime(opportunity.at)}</p>
+          </div>
         </div>
-        <div className="space-y-2 px-4">
-          <p className="text-sm leading-relaxed">“{opportunity.action}”</p>
-          <p className="text-xs text-muted-foreground">{formatDateTime(opportunity.at)}</p>
-        </div>
-        <SheetFooter>
+
+        <SheetFooter className="gap-2 sm:gap-0">
           <Button
+            className="w-full bg-gold text-gold-foreground hover:bg-gold/90"
             onClick={() => {
-              toast.message("Queued for seller review", {
-                description: "Demo only — no pricing system is connected.",
+              toast.success("Opportunity queued for review", {
+                description: "Simulation mode — item added to seller decision queue.",
               })
               onOpenChange(false)
             }}
           >
-            Queue recommended action
+            Queue Recommended Action
           </Button>
-          <LinkButton variant="outline" href={`/products/${opportunity.productId}`}>
-            Inspect product
+          <LinkButton variant="outline" className="w-full" href={`/products/${opportunity.productId}`}>
+            Inspect Product Details
           </LinkButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>
   )
 }
+

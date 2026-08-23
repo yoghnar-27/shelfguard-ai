@@ -1,14 +1,12 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { cn } from "@/lib/utils"
 
 export function ScoreRing({ score, size = 88 }: { score: number; size?: number }) {
   const [drawn, setDrawn] = useState(score)
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
     if (reduced) {
-      setDrawn(score)
       return
     }
     const start = performance.now()

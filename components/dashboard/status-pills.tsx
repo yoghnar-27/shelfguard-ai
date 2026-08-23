@@ -48,4 +48,3 @@ export function MonitorPill({ status }: { status: MonitorStatus }) {
   )
 }
 
-export function MonitorPill({ status }: { status: MonitorStatus }) {
