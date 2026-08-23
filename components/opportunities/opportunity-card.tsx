@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { toast } from "sonner"
-import { ChevronDown, ExternalLink, Sparkles } from "lucide-react"
+import { ChevronDown, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { LinkButton } from "@/components/dashboard/link-button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -138,13 +138,9 @@ export function OpportunityCard({
 
 
           <div className="flex flex-wrap items-center gap-2 pt-1">
-            <Button size="sm" onClick={() => setDrawer(true)} className="bg-gold text-gold-foreground hover:bg-gold/90">
+            <Button size="sm" onClick={() => setDrawer(true)} className="bg-gold text-gold-foreground hover:bg-gold/90 font-semibold">
               Review opportunity
             </Button>
-            <LinkButton size="sm" variant="outline" href={`/products/${opportunity.productId}`}>
-              Open product
-              <ExternalLink className="ml-1 size-3" />
-            </LinkButton>
             <Button
               size="sm"
               variant="ghost"

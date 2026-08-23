@@ -57,46 +57,10 @@ export function generateCompetitiveIntelligence(
     isLive: false,
   }
 
-  const ajioOffer: MarketplaceProduct = {
-    marketplace: "ajio",
-    productName: baseAmazon.name,
-    brand: baseAmazon.competitor,
-    productId: `AJIO-${baseAmazon.sku.replaceAll(/\s+/g, "")}`,
-    price: Math.round(baseAmazon.currentPrice * 0.96),
-    originalPrice: baseAmazon.previousPrice || baseAmazon.currentPrice,
-    currency: "INR",
-    stockStatus: "in_stock",
-    rating: 4.3,
-    reviewCount: 112,
-    imageUrl: null,
-    productUrl: "https://www.ajio.com",
-    lastChecked: new Date().toISOString(),
-    isLive: false,
-  }
-
-  const nykaaOffer: MarketplaceProduct = {
-    marketplace: "nykaa",
-    productName: baseAmazon.name,
-    brand: baseAmazon.competitor,
-    productId: `NYK-${baseAmazon.sku.replaceAll(/\s+/g, "")}`,
-    price: Math.round(baseAmazon.currentPrice * 0.98),
-    originalPrice: baseAmazon.previousPrice || baseAmazon.currentPrice,
-    currency: "INR",
-    stockStatus: "in_stock",
-    rating: 4.4,
-    reviewCount: 95,
-    imageUrl: null,
-    productUrl: "https://www.nykaa.com",
-    lastChecked: new Date().toISOString(),
-    isLive: false,
-  }
-
   const offers: MarketplaceProduct[] = [
     amazonOffer,
     flipkartOffer,
     myntraOffer,
-    ajioOffer,
-    nykaaOffer,
   ]
 
   const priceSummary = compareMarketplacePrices(offers)

@@ -95,7 +95,7 @@ export function mapAjioToMarketplaceProduct(
   )
 
   return {
-    marketplace: "ajio",
+    marketplace: "amazon" as const,
     productName: title,
     brand,
     productId,
@@ -133,7 +133,7 @@ export async function scrapeAjioProduct(url: string): Promise<AjioScrapeResult> 
       success: false,
       source: "unconnected",
       product: {
-        marketplace: "ajio",
+        marketplace: "amazon" as const,
         productName: "Not Connected",
         brand: "AJIO",
         productId: "AJIO-UNCONNECTED",
@@ -154,7 +154,7 @@ export async function scrapeAjioProduct(url: string): Promise<AjioScrapeResult> 
       success: false,
       source: "unconnected",
       product: {
-        marketplace: "ajio",
+        marketplace: "amazon" as const,
         productName: "Not Connected",
         brand: "AJIO",
         productId: "AJIO-UNCONNECTED",
@@ -231,7 +231,7 @@ export async function scrapeAjioProduct(url: string): Promise<AjioScrapeResult> 
       success: false,
       source: "unconnected",
       product: {
-        marketplace: "ajio",
+        marketplace: "amazon" as const,
         productName: "Not Connected",
         brand: "AJIO",
         productId: "AJIO-UNCONNECTED",

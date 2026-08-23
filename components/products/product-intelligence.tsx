@@ -2,14 +2,12 @@ import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { LinkButton } from "@/components/dashboard/link-button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { PriceAreaChart } from "@/components/dashboard/charts"
 import { ErrorState } from "@/components/dashboard/empty-state"
 import { MonitorPill, StockPill } from "@/components/dashboard/status-pills"
 import { OpportunityCard } from "@/components/opportunities/opportunity-card"
 import { formatDateTime, formatDelta, formatMoney, stockLabel } from "@/lib/format"
 import {
   getCompetitorsFor,
-  getPriceHistory,
   getProduct,
   getProductChanges,
   getProductOpportunities,
@@ -17,7 +15,7 @@ import {
 } from "@/lib/mock"
 import { generateCompetitiveIntelligence } from "@/lib/intelligence"
 import { cn } from "@/lib/utils"
-import { ExternalLink, Sparkles, Zap } from "lucide-react"
+import { Sparkles } from "lucide-react"
 
 export function ProductIntelligence({ id }: { id: string }) {
   let product = getProduct(id)
@@ -132,8 +130,6 @@ export function ProductIntelligence({ id }: { id: string }) {
               </CardTitle>
               <CardDescription className="text-xs">
                 Real-time price spread across Amazon, Flipkart & Myntra.
-
-
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
@@ -147,69 +143,42 @@ export function ProductIntelligence({ id }: { id: string }) {
           </div>
         </CardHeader>
         <CardContent className="overflow-x-auto space-y-4">
-          <table className="w-full min-w-[600px] text-left text-sm">
+          <table className="w-full min-w-[500px] text-left text-sm">
             <thead className="bg-muted/30 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
               <tr className="border-b border-border/70">
-                <th className="px-4 py-3 font-medium">Marketplace</th>
-                <th className="px-4 py-3 font-medium">Data Status</th>
-                <th className="px-4 py-3 font-medium">Price (INR)</th>
-                <th className="px-4 py-3 font-medium">Price Variance</th>
-                <th className="px-4 py-3 font-medium">Stock Status</th>
-                <th className="px-4 py-3 font-medium">Action</th>
+                <th className="px-4 py-3 font-medium">MARKETPLACE</th>
+                <th className="px-4 py-3 font-medium">STATUS</th>
+                <th className="px-4 py-3 font-medium">PRICE</th>
+                <th className="px-4 py-3 font-medium">AVAILABILITY</th>
               </tr>
             </thead>
             <tbody>
               {intelligence.offers.map((offer) => {
-                const isCheapest = offer.marketplace === intelligence.priceSummary.cheapestMarketplace
-                const variance = offer.price - intelligence.priceSummary.lowestPrice
-                const variancePct =
-                  intelligence.priceSummary.lowestPrice > 0
-                    ? Number(((variance / intelligence.priceSummary.lowestPrice) * 100).toFixed(1))
-                    : 0
-
                 return (
                   <tr key={offer.marketplace} className="border-b border-border/50 last:border-0 hover:bg-muted/20">
-                    <td className="px-4 py-3 font-heading font-semibold text-foreground capitalize">
+                    <td className="px-4 py-3 font-heading font-bold text-foreground uppercase">
                       {offer.marketplace}
                     </td>
                     <td className="px-4 py-3">
-                      {offer.isLive ? (
-                        <span className="inline-flex items-center gap-1 rounded-full border border-teal/40 bg-teal/10 px-2 py-0.5 text-[10px] font-bold text-teal uppercase">
+                      {offer.isLive && offer.price > 0 ? (
+                        <span className="inline-flex items-center gap-1 rounded-full border border-teal/40 bg-teal/10 px-2.5 py-0.5 text-[10px] font-bold text-teal uppercase">
                           <span className="size-1.5 rounded-full bg-teal animate-pulse" />
-                          LIVE (BRIGHT DATA)
+                          LIVE
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 rounded-full border border-border/80 bg-muted/40 px-2 py-0.5 text-[10px] font-medium text-muted-foreground uppercase">
-                          <Zap className="size-3 text-gold" />
-                          DEMO / UNCONNECTED
+                        <span className="inline-flex items-center gap-1 rounded-full border border-border/80 bg-muted/40 px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground uppercase">
+                          UNAVAILABLE
                         </span>
                       )}
                     </td>
                     <td className="px-4 py-3 font-mono font-bold tabular-nums text-foreground">
-                      {formatMoney(offer.price)}
-                    </td>
-                    <td className="px-4 py-3 font-mono text-xs tabular-nums">
-                      {isCheapest ? (
-                        <span className="text-teal font-bold">Lowest Price</span>
-                      ) : (
-                        <span className="text-signal">+{variancePct}% (+₹{variance.toLocaleString()})</span>
-                      )}
+                      {offer.isLive && offer.price > 0 ? formatMoney(offer.price) : "—"}
                     </td>
                     <td className="px-4 py-3">
-                      <StockPill status={offer.stockStatus} />
-                    </td>
-                    <td className="px-4 py-3">
-                      {offer.productUrl && offer.productUrl !== "#" ? (
-                        <a
-                          href={offer.productUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center text-xs text-gold hover:underline font-medium"
-                        >
-                          PDP Link <ExternalLink className="ml-1 size-3" />
-                        </a>
+                      {offer.isLive && offer.price > 0 ? (
+                        <StockPill status={offer.stockStatus} />
                       ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase">UNAVAILABLE</span>
                       )}
                     </td>
                   </tr>
@@ -217,17 +186,6 @@ export function ProductIntelligence({ id }: { id: string }) {
               })}
             </tbody>
           </table>
-        </CardContent>
-      </Card>
-
-      <Card>
-
-        <CardHeader>
-          <CardTitle>Historical price</CardTitle>
-          <CardDescription>Mock extract history for this product page.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <PriceAreaChart data={history} />
         </CardContent>
       </Card>
 

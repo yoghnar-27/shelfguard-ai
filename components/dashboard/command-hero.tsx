@@ -45,7 +45,7 @@ export function CommandHero({ actions }: { actions?: ReactNode }) {
           {/* Marketplace Status Badges Bar */}
           <div className="flex flex-wrap items-center gap-2 pt-1">
             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mr-1">
-              Marketplaces:
+              3 TARGET RETAILERS:
             </span>
             <span className="inline-flex items-center gap-1 rounded-full border border-teal/40 bg-teal/10 px-2.5 py-0.5 text-[10px] font-bold text-teal">
               <span className="size-1.5 rounded-full bg-teal" />

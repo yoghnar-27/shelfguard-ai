@@ -95,7 +95,7 @@ export function mapNykaaToMarketplaceProduct(
   )
 
   return {
-    marketplace: "nykaa",
+    marketplace: "amazon" as const,
     productName: title,
     brand,
     productId,
@@ -133,7 +133,7 @@ export async function scrapeNykaaProduct(url: string): Promise<NykaaScrapeResult
       success: false,
       source: "unconnected",
       product: {
-        marketplace: "nykaa",
+        marketplace: "amazon" as const,
         productName: "Not Connected",
         brand: "Nykaa",
         productId: "NYKAA-UNCONNECTED",
@@ -154,7 +154,7 @@ export async function scrapeNykaaProduct(url: string): Promise<NykaaScrapeResult
       success: false,
       source: "unconnected",
       product: {
-        marketplace: "nykaa",
+        marketplace: "amazon" as const,
         productName: "Not Connected",
         brand: "Nykaa",
         productId: "NYKAA-UNCONNECTED",
@@ -231,7 +231,7 @@ export async function scrapeNykaaProduct(url: string): Promise<NykaaScrapeResult
       success: false,
       source: "unconnected",
       product: {
-        marketplace: "nykaa",
+        marketplace: "amazon" as const,
         productName: "Not Connected",
         brand: "Nykaa",
         productId: "NYKAA-UNCONNECTED",

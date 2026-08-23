@@ -23,7 +23,7 @@ export function ProductUrlInput({
   loading?: boolean
   statusMap?: ScanStatusMap
 }) {
-  const [amazonUrl, setAmazonUrl] = useState("https://amzn.in/d/0bOhQFBi")
+  const [amazonUrl, setAmazonUrl] = useState("https://www.amazon.in/dp/B0DG2SLR9F")
   const [flipkartUrl, setFlipkartUrl] = useState("https://www.flipkart.com/boat-rockerz-551-anc-pro-2025-launch-42db-anc-72hrs-battery-app-support-bluetooth/p/itmea53b35bf6e5f")
   const [myntraUrl, setMyntraUrl] = useState("https://www.myntra.com/dresses/dressberry/dressberry-pink-floral-printed-puff-sleeves-square-neck-maxi-dress/24000348/buy")
 

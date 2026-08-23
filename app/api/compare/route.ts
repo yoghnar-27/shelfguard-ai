@@ -2,8 +2,6 @@ import { NextResponse } from "next/server"
 import { executeBrightDataScrape } from "@/lib/brightdata/client"
 import { scrapeFlipkartProduct, isFlipkartUrl } from "@/lib/brightdata/flipkart"
 import { scrapeMyntraProduct, isMyntraUrl } from "@/lib/brightdata/myntra"
-import { scrapeAjioProduct, isAjioUrl } from "@/lib/brightdata/ajio"
-import { scrapeNykaaProduct, isNykaaUrl } from "@/lib/brightdata/nykaa"
 import {
   areProductsMatching,
   compareMarketplacePrices,
@@ -20,17 +18,13 @@ export async function POST(req: Request) {
     const amazonUrl = String(body.amazonUrl || "https://www.amazon.in/dp/B0DG2SLR9F").trim()
     const flipkartUrl = String(body.flipkartUrl || "").trim()
     const myntraUrl = String(body.myntraUrl || "").trim()
-    const ajioUrl = String(body.ajioUrl || "").trim()
-    const nykaaUrl = String(body.nykaaUrl || "").trim()
 
     const hasAmazonUrl = Boolean(amazonUrl && amazonUrl.length > 5)
     const hasFlipkartUrl = Boolean(flipkartUrl && flipkartUrl.length > 5)
     const hasMyntraUrl = Boolean(myntraUrl && myntraUrl.length > 5)
-    const hasAjioUrl = Boolean(ajioUrl && ajioUrl.length > 5)
-    const hasNykaaUrl = Boolean(nykaaUrl && nykaaUrl.length > 5)
 
     // Concurrent marketplace scraping via Promise.allSettled
-    const [amazonResult, flipkartResult, myntraResult, ajioResult, nykaaResult] =
+    const [amazonResult, flipkartResult, myntraResult] =
       await Promise.allSettled([
         // 1. Amazon (DCA)
         executeBrightDataScrape({ url: amazonUrl }),
@@ -38,10 +32,6 @@ export async function POST(req: Request) {
         flipkartUrl ? scrapeFlipkartProduct(flipkartUrl) : Promise.reject(new Error("No Flipkart URL")),
         // 3. Myntra (v3)
         myntraUrl ? scrapeMyntraProduct(myntraUrl) : Promise.reject(new Error("No Myntra URL")),
-        // 4. AJIO (v3)
-        ajioUrl ? scrapeAjioProduct(ajioUrl) : Promise.reject(new Error("No AJIO URL")),
-        // 5. Nykaa (v3)
-        nykaaUrl ? scrapeNykaaProduct(nykaaUrl) : Promise.reject(new Error("No Nykaa URL")),
       ])
 
     // --- 1. Amazon ---
@@ -140,74 +130,10 @@ export async function POST(req: Request) {
       }
     }
 
-    // --- 4. AJIO ---
-    let ajioOffer: MarketplaceProduct
-    let ajioError: string | null = null
-    if (ajioResult.status === "fulfilled" && ajioResult.value.product) {
-      ajioOffer = ajioResult.value.product
-      if (!ajioResult.value.success || ajioOffer.price <= 0) {
-        ajioOffer.isLive = false
-        ajioOffer.price = 0
-        ajioOffer.productName = hasAjioUrl ? "Unable to Retrieve" : "Not Provided"
-        ajioError = ajioResult.value.error || "AJIO listing unavailable"
-      }
-    } else {
-      ajioError =
-        hasAjioUrl && !isAjioUrl(ajioUrl)
-          ? "Invalid AJIO product URL"
-          : "AJIO dataset integration not configured in environment"
-      ajioOffer = {
-        marketplace: "ajio",
-        productName: hasAjioUrl ? "Unable to Retrieve" : "Not Provided",
-        brand: "AJIO",
-        productId: "AJIO-UNAVAILABLE",
-        price: 0,
-        originalPrice: 0,
-        currency: "INR",
-        stockStatus: "out_of_stock",
-        productUrl: ajioUrl || "https://www.ajio.com",
-        lastChecked: new Date().toISOString(),
-        isLive: false,
-      }
-    }
-
-    // --- 5. Nykaa ---
-    let nykaaOffer: MarketplaceProduct
-    let nykaaError: string | null = null
-    if (nykaaResult.status === "fulfilled" && nykaaResult.value.product) {
-      nykaaOffer = nykaaResult.value.product
-      if (!nykaaResult.value.success || nykaaOffer.price <= 0) {
-        nykaaOffer.isLive = false
-        nykaaOffer.price = 0
-        nykaaOffer.productName = hasNykaaUrl ? "Unable to Retrieve" : "Not Provided"
-        nykaaError = nykaaResult.value.error || "Nykaa listing unavailable"
-      }
-    } else {
-      nykaaError =
-        hasNykaaUrl && !isNykaaUrl(nykaaUrl)
-          ? "Invalid Nykaa product URL"
-          : "Nykaa dataset integration not configured in environment"
-      nykaaOffer = {
-        marketplace: "nykaa",
-        productName: hasNykaaUrl ? "Unable to Retrieve" : "Not Provided",
-        brand: "Nykaa",
-        productId: "NYKAA-UNAVAILABLE",
-        price: 0,
-        originalPrice: 0,
-        currency: "INR",
-        stockStatus: "out_of_stock",
-        productUrl: nykaaUrl || "https://www.nykaa.com",
-        lastChecked: new Date().toISOString(),
-        isLive: false,
-      }
-    }
-
     const offers: MarketplaceProduct[] = [
       amazonOffer,
       flipkartOffer,
       myntraOffer,
-      ajioOffer,
-      nykaaOffer,
     ]
 
     // Evaluate Product Similarity / Matching
@@ -232,8 +158,6 @@ export async function POST(req: Request) {
       amazon: { ...amazonOffer, error: amazonError, hasUrl: hasAmazonUrl },
       flipkart: { ...flipkartOffer, error: flipkartError, hasUrl: hasFlipkartUrl },
       myntra: { ...myntraOffer, error: myntraError, hasUrl: hasMyntraUrl },
-      ajio: { ...ajioOffer, error: ajioError, hasUrl: hasAjioUrl },
-      nykaa: { ...nykaaOffer, error: nykaaError, hasUrl: hasNykaaUrl },
       comparison: {
         lowestPrice: priceSummary.lowestPrice,
         highestPrice: priceSummary.highestPrice,

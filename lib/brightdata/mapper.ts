@@ -27,9 +27,25 @@ export function parseBrightDataPrice(priceField?: unknown): number {
     return 0
   }
 
+  if (Array.isArray(priceField) && priceField.length > 0) {
+    for (const item of priceField) {
+      const val = parseBrightDataPrice(item)
+      if (val > 0) return val
+    }
+  }
+
   if (typeof priceField === "object") {
     const obj = priceField as Record<string, unknown>
-    const val = obj.value ?? obj.amount ?? obj.price ?? obj.raw ?? obj.discounted_price ?? obj.final_price
+    const val =
+      obj.value ??
+      obj.amount ??
+      obj.price ??
+      obj.raw ??
+      obj.discounted_price ??
+      obj.final_price ??
+      obj.current_price ??
+      obj.sale_price ??
+      obj.offer_price
     if (val !== undefined && val !== null) {
       return parseBrightDataPrice(val)
     }
@@ -97,11 +113,26 @@ export function mapBrightDataToShelfGuardProduct(raw: BrightDataProduct): Produc
     parseBrightDataPrice(raw.price) ||
     parseBrightDataPrice(raw.final_price) ||
     parseBrightDataPrice(raw.buybox_price) ||
+    parseBrightDataPrice(raw.buy_box_price) ||
     parseBrightDataPrice(raw.price_raw) ||
     parseBrightDataPrice(raw.initial_price) ||
     parseBrightDataPrice(raw.discounted_price) ||
     parseBrightDataPrice(raw.our_price) ||
-    parseBrightDataPrice(raw.unit_price)
+    parseBrightDataPrice(raw.unit_price) ||
+    parseBrightDataPrice(raw.sale_price) ||
+    parseBrightDataPrice(raw.offer_price) ||
+    parseBrightDataPrice(raw.price_str) ||
+    parseBrightDataPrice(raw.price_final) ||
+    parseBrightDataPrice(raw.pricing) ||
+    parseBrightDataPrice(raw.deal_price) ||
+    parseBrightDataPrice(raw.price_value) ||
+    parseBrightDataPrice(raw.amount) ||
+    parseBrightDataPrice(raw.value) ||
+    parseBrightDataPrice(raw.buying_price) ||
+    parseBrightDataPrice(raw.list_price) ||
+    parseBrightDataPrice(raw.buy_box) ||
+    parseBrightDataPrice(raw.offers) ||
+    parseBrightDataPrice(raw.prices)
 
   const originalPrice =
     parseBrightDataPrice(raw.original_price) ||

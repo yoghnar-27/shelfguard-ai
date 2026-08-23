@@ -15,7 +15,7 @@ import { Sidebar } from "@/components/dashboard/sidebar"
 import { ThemeOrb } from "@/components/theme/theme-orb"
 
 const titles: Record<string, string> = {
-  "/": "Command Center",
+  "/": "LIVE MARKET INTELLIGENCE",
   "/watchlist": "Watchlist",
   "/products": "Products",
   "/opportunities": "Opportunities",

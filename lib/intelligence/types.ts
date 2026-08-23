@@ -2,8 +2,6 @@ export type SupportedMarketplace =
   | "amazon"
   | "flipkart"
   | "myntra"
-  | "ajio"
-  | "nykaa"
 
 export type MarketplaceProduct = {
   marketplace: SupportedMarketplace

@@ -4,11 +4,10 @@ import { useState } from "react"
 import { CommandHero } from "@/components/dashboard/command-hero"
 import { MarketRadar } from "@/components/market-radar/market-radar"
 import { MarketplacePriceCard } from "@/components/comparison/marketplace-price-card"
-import { PriceGap } from "@/components/comparison/price-gap"
+import { PairwiseComparison } from "@/components/comparison/pairwise-comparison"
 import type { ScanStatusMap } from "@/components/scan/product-url-input"
 import { ProductUrlInput } from "@/components/scan/product-url-input"
 import { RecommendationPanel } from "@/components/opportunities/recommendation-panel"
-import { PriceTrajectory } from "@/components/dashboard/price-trajectory"
 import { Sparkles, ArrowRight, Loader2, AlertTriangle } from "lucide-react"
 import { LinkButton } from "@/components/dashboard/link-button"
 import type { MarketplaceProduct, DetectedOpportunitySignal } from "@/lib/intelligence/types"
@@ -37,7 +36,7 @@ export default function CommandCenterPage() {
     originalPrice: 0,
     currency: "INR",
     stockStatus: "out_of_stock",
-    productUrl: "https://www.amazon.in",
+    productUrl: "https://www.amazon.in/dp/B0DG2SLR9F",
     lastChecked: new Date().toISOString(),
     isLive: false,
   })
@@ -86,10 +85,6 @@ export default function CommandCenterPage() {
 
   const gapAmount = lowestOffer && highestOffer ? highestOffer.price - lowestOffer.price : 0
   const cheapestMarketplace = lowestOffer ? lowestOffer.marketplace : "amazon"
-  const gapPercentage =
-    lowestOffer && lowestOffer.price > 0
-      ? Number(((gapAmount / lowestOffer.price) * 100).toFixed(1))
-      : 0
 
   async function handleScanMarket(urls: {
     amazonUrl: string
@@ -222,10 +217,10 @@ export default function CommandCenterPage() {
             ) : liveOffers.length >= 2 && gapAmount === 0 ? (
               <>
                 <h2 className="font-heading text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-                  EQUAL PRICING — ₹{lowestOffer?.price.toLocaleString("en-IN")} ACROSS {liveOffers.length === 3 ? "AMAZON, FLIPKART AND MYNTRA" : `${liveOffers.length} MARKETPLACES`}
+                  EQUAL PRICING — ₹{lowestOffer?.price.toLocaleString("en-IN")} ACROSS {liveOffers.length === 3 ? "AMAZON, FLIPKART AND MYNTRA" : "BOTH MARKETPLACES"}
                 </h2>
                 <p className="text-xs text-muted-foreground font-medium">
-                  Equal prices detected across all active live channels. No price spread gap.
+                  Equal prices detected across active live channels. No price spread gap.
                 </p>
               </>
             ) : liveOffers.length >= 2 && gapAmount > 0 ? (
@@ -234,7 +229,7 @@ export default function CommandCenterPage() {
                   {cheapestMarketplace.toUpperCase()} IS CURRENTLY ₹{gapAmount.toLocaleString("en-IN")} CHEAPER
                 </h2>
                 <p className="text-xs text-muted-foreground font-medium">
-                  <span className="text-gold font-bold">{gapPercentage}% price gap</span> across {liveOffers.length} live channels
+                  Verified across {liveOffers.length} live channels
                 </p>
               </>
             ) : liveOffers.length === 1 ? (
@@ -288,13 +283,13 @@ export default function CommandCenterPage() {
         </div>
       ) : null}
 
-      {/* 3. Dynamic Product Identity & Marketplace Cards */}
+      {/* 3. Dynamic Product Identity & 3 Marketplace Price Cards */}
       {!loading ? (
         <div className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-3">
             <div>
               <span className="text-[10px] font-bold tracking-widest text-gold uppercase">Tracked Listing</span>
-              <h3 className="font-heading text-xl font-bold text-foreground">
+              <h3 className="font-heading text-xl font-bold text-foreground break-words">
                 {hasScanned || liveOffers.length ? productName : "Ready to scan markets"}
               </h3>
               <p className="text-xs text-muted-foreground">
@@ -306,8 +301,8 @@ export default function CommandCenterPage() {
             </LinkButton>
           </div>
 
-          {/* 3 Marketplace Price Stations Grid */}
-          <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr_1fr] items-center">
+          {/* 3 Target Retailer Cards Grid */}
+          <div className="grid gap-4 sm:grid-cols-3">
             <MarketplacePriceCard
               marketplace="Amazon"
               price={amazonOffer.isLive ? amazonOffer.price : 0}
@@ -316,14 +311,6 @@ export default function CommandCenterPage() {
               isLive={amazonOffer.isLive}
               hasUrl={Boolean(amazonOffer.productUrl && amazonOffer.productUrl.length > 10)}
               isCheapest={cheapestMarketplace === "amazon" && amazonOffer.isLive}
-            />
-
-            <PriceGap
-              liveCount={liveOffers.length}
-              gapAmount={gapAmount}
-              gapPercentage={gapPercentage}
-              cheapestMarketplace={cheapestMarketplace}
-              equalPrice={lowestOffer ? lowestOffer.price : 0}
             />
 
             <MarketplacePriceCard
@@ -345,12 +332,20 @@ export default function CommandCenterPage() {
               hasUrl={Boolean(myntraOffer.productUrl && myntraOffer.productUrl.length > 10)}
               isCheapest={cheapestMarketplace === "myntra" && myntraOffer.isLive}
             />
-
           </div>
         </div>
       ) : null}
 
-      {/* 4. Decision Intelligence Panel */}
+      {/* 4. Pairwise Comparisons & Best Price Highlight */}
+      {!loading ? (
+        <PairwiseComparison
+          amazonOffer={amazonOffer}
+          flipkartOffer={flipkartOffer}
+          myntraOffer={myntraOffer}
+        />
+      ) : null}
+
+      {/* 5. Opportunity & Decision Panel */}
       {!loading && liveOffers.length >= 1 ? (
         <RecommendationPanel
           opportunities={opportunities as unknown as Array<{
@@ -367,14 +362,7 @@ export default function CommandCenterPage() {
           gapAmount={gapAmount}
           amazonPrice={amazonOffer.isLive ? amazonOffer.price : 0}
           flipkartPrice={flipkartOffer.isLive ? flipkartOffer.price : 0}
-        />
-      ) : null}
-
-      {/* 5. Historical Price Trajectory */}
-      {!loading && liveOffers.length >= 1 ? (
-        <PriceTrajectory
-          amazonCurrent={amazonOffer.isLive ? amazonOffer.price : 3999}
-          flipkartCurrent={flipkartOffer.isLive ? flipkartOffer.price : 8990}
+          myntraPrice={myntraOffer.isLive ? myntraOffer.price : 0}
         />
       ) : null}
     </div>
