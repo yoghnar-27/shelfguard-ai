@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { CommandHero } from "@/components/dashboard/command-hero"
 import { MarketRadar } from "@/components/market-radar/market-radar"
 import { MarketplacePriceCard } from "@/components/comparison/marketplace-price-card"
@@ -16,6 +16,7 @@ export default function CommandCenterPage() {
   const [loading, setLoading] = useState(false)
   const [hasScanned, setHasScanned] = useState(false)
   const [matchMessage, setMatchMessage] = useState<string | null>(null)
+  const activeScanIdRef = useRef<string | null>(null)
 
   const [statusMap, setStatusMap] = useState<ScanStatusMap>({
     amazon: "WAITING",
@@ -91,6 +92,9 @@ export default function CommandCenterPage() {
     flipkartUrl: string
     myntraUrl: string
   }) {
+    const currentScanId = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `scan-${Date.now()}`
+    activeScanIdRef.current = currentScanId
+
     // 1. CLEAR OLD PRODUCT DATA IMMEDIATELY
     setLoading(true)
     setHasScanned(true)
@@ -149,14 +153,20 @@ export default function CommandCenterPage() {
     })
 
     try {
-      // 2. FETCH FROM SERVER ROUTE
+      // 2. FETCH FROM SERVER ROUTE WITH UNIQUE SCAN ID
       const res = await fetch("/api/compare", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(urls),
+        body: JSON.stringify({ ...urls, scanId: currentScanId }),
       })
 
       const data = await res.json()
+
+      // Ignore response if a newer scan was initiated while this request was pending
+      if (activeScanIdRef.current !== currentScanId) {
+        console.log(`[SCAN] Discarding response from older scanId: ${currentScanId}`)
+        return
+      }
 
       if (data.success) {
         // 3. REPLACE STATE STRICTLY WITH API RESPONSE
@@ -189,7 +199,9 @@ export default function CommandCenterPage() {
     } catch (err) {
       console.error("Scan error:", err)
     } finally {
-      setLoading(false)
+      if (activeScanIdRef.current === currentScanId) {
+        setLoading(false)
+      }
     }
   }
 

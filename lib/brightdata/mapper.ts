@@ -17,9 +17,11 @@ export function parseBrightDataPrice(priceField?: unknown): number {
   }
 
   if (typeof priceField === "string") {
-    // Strip commas e.g. "₹1,699.00" -> "₹1699.00", then extract decimal numbers
-    const stripped = priceField.replace(/,/g, "")
-    const match = stripped.match(/\d+(?:\.\d+)?/)
+    // Strip currency symbols (₹, INR, Rs, USD, $), commas, and spaces
+    const cleaned = priceField
+      .replace(/₹|INR|Rs\.?|USD|\$|,|\s/gi, "")
+      .trim()
+    const match = cleaned.match(/\d+(?:\.\d+)?/)
     if (match) {
       const parsed = Number.parseFloat(match[0])
       return Number.isNaN(parsed) ? 0 : Math.round(parsed * 100) / 100
@@ -45,13 +47,33 @@ export function parseBrightDataPrice(priceField?: unknown): number {
       obj.final_price ??
       obj.current_price ??
       obj.sale_price ??
-      obj.offer_price
+      obj.offer_price ??
+      obj.buybox_price ??
+      obj.our_price
     if (val !== undefined && val !== null) {
       return parseBrightDataPrice(val)
     }
   }
 
   return 0
+}
+
+/**
+ * Extracts clean 10-character ASIN from Amazon URLs or product ID strings.
+ */
+export function extractAmazonAsin(val?: string | null): string {
+  if (!val) return ""
+  const match = val.match(/(?:dp|gp\/product|d)\/([A-Z0-9]{10})/i)
+  if (match && match[1]) {
+    return match[1].toUpperCase()
+  }
+  const clean = val.split("?")[0].split("#")[0].trim()
+  const parts = clean.split("/").filter(Boolean)
+  const last = parts.pop() || ""
+  if (/^[A-Z0-9]{10}$/i.test(last)) {
+    return last.toUpperCase()
+  }
+  return last || "ASIN-UNKNOWN"
 }
 
 /**
@@ -173,16 +195,19 @@ export function mapBrightDataToShelfGuardProduct(raw: BrightDataProduct): Produc
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "") || "competitor"
 
-  const rawAsin = String(
-    raw.asin ||
-      raw.product_id_or_asin ||
-      raw.sku ||
-      raw.product_id ||
-      raw.item_id ||
-      raw.id ||
-      (raw.product_url ? raw.product_url.split("/").pop() : null) ||
-      `ASIN-${Date.now()}`
-  ).trim()
+  const parsedAsin = extractAmazonAsin(
+    String(
+      raw.asin ||
+        raw.product_id_or_asin ||
+        raw.sku ||
+        raw.product_id ||
+        raw.item_id ||
+        raw.id ||
+        raw.product_url ||
+        ""
+    )
+  )
+  const rawAsin = parsedAsin || `ASIN-${Date.now()}`
 
   const category = String(
     raw.product_category || raw.category || raw.department || raw.category_tree || "General"

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { executeBrightDataScrape } from "@/lib/brightdata/client"
+import { executeBrightDataScrape, resolveAmazonUrl } from "@/lib/brightdata/client"
 import { scrapeFlipkartProduct, isFlipkartUrl } from "@/lib/brightdata/flipkart"
 import { scrapeMyntraProduct, isMyntraUrl } from "@/lib/brightdata/myntra"
 import {
@@ -11,44 +11,133 @@ import {
 } from "@/lib/intelligence"
 import type { MarketplaceProduct } from "@/lib/intelligence/types"
 
+/**
+ * Wraps a promise with a hard timeout per scraper request.
+ */
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, label: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(`${label} request timed out after ${Math.round(timeoutMs / 1000)}s`))
+    }, timeoutMs)
+
+    promise
+      .then((res) => {
+        clearTimeout(timer)
+        resolve(res)
+      })
+      .catch((err) => {
+        clearTimeout(timer)
+        reject(err)
+      })
+  })
+}
+
+/**
+ * Executes a scraper function with 1 automatic retry on transient HTTP 429/5xx/network errors.
+ */
+async function executeWithRetry<T>(fn: () => Promise<T>, label: string): Promise<T> {
+  try {
+    return await fn()
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : String(err)
+    if (
+      errMsg.includes("429") ||
+      errMsg.includes("500") ||
+      errMsg.includes("502") ||
+      errMsg.includes("503") ||
+      errMsg.includes("504") ||
+      errMsg.includes("fetch failed") ||
+      errMsg.includes("socket")
+    ) {
+      console.warn(`[${label}] Transient error encountered ('${errMsg}'). Retrying in 1.5s...`)
+      await new Promise((r) => setTimeout(r, 1500))
+      return await fn()
+    }
+    throw err
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}))
 
-    const amazonUrl = String(body.amazonUrl || "https://www.amazon.in/dp/B0DG2SLR9F").trim()
+    const rawAmazonUrl = String(body.amazonUrl || "").trim()
     const flipkartUrl = String(body.flipkartUrl || "").trim()
     const myntraUrl = String(body.myntraUrl || "").trim()
+    const scanId = String(body.scanId || `scan-${Date.now()}`)
 
-    const hasAmazonUrl = Boolean(amazonUrl && amazonUrl.length > 5)
+    const hasAmazonUrl = Boolean(rawAmazonUrl && rawAmazonUrl.length > 5)
     const hasFlipkartUrl = Boolean(flipkartUrl && flipkartUrl.length > 5)
     const hasMyntraUrl = Boolean(myntraUrl && myntraUrl.length > 5)
 
-    // Concurrent marketplace scraping via Promise.allSettled
-    const [amazonResult, flipkartResult, myntraResult] =
-      await Promise.allSettled([
-        // 1. Amazon (DCA)
-        executeBrightDataScrape({ url: amazonUrl }),
-        // 2. Flipkart (v3)
-        flipkartUrl ? scrapeFlipkartProduct(flipkartUrl) : Promise.reject(new Error("No Flipkart URL")),
-        // 3. Myntra (v3)
-        myntraUrl ? scrapeMyntraProduct(myntraUrl) : Promise.reject(new Error("No Myntra URL")),
-      ])
+    console.log(`[SCAN] Scan ID: ${scanId}`)
+    console.log(`[SCAN] Amazon URL received: ${hasAmazonUrl}`)
+    console.log(`[SCAN] Flipkart URL received: ${hasFlipkartUrl}`)
+    console.log(`[SCAN] Myntra URL received: ${hasMyntraUrl}`)
 
-    // --- 1. Amazon ---
+    // 1. Amazon Resolution
+    let amazonUrl = rawAmazonUrl
+    if (hasAmazonUrl) {
+      console.log(`[AMAZON] request started`)
+      amazonUrl = await resolveAmazonUrl(rawAmazonUrl)
+    }
+
+    // 2. Concurrent Marketplace Scrapers with Independent Promise.allSettled + 35s Max Timeout per Channel
+    const SCRAPER_TIMEOUT_MS = 35000
+
+    const amazonTask = hasAmazonUrl
+      ? withTimeout(
+          executeWithRetry(() => executeBrightDataScrape({ url: amazonUrl }), "AMAZON"),
+          SCRAPER_TIMEOUT_MS,
+          "Amazon"
+        )
+      : Promise.reject(new Error("No Amazon URL provided"))
+
+    const flipkartTask = hasFlipkartUrl
+      ? withTimeout(
+          executeWithRetry(() => scrapeFlipkartProduct(flipkartUrl), "FLIPKART"),
+          SCRAPER_TIMEOUT_MS,
+          "Flipkart"
+        )
+      : Promise.reject(new Error("No Flipkart URL provided"))
+
+    const myntraTask = hasMyntraUrl
+      ? withTimeout(
+          executeWithRetry(() => scrapeMyntraProduct(myntraUrl), "MYNTRA"),
+          SCRAPER_TIMEOUT_MS,
+          "Myntra"
+        )
+      : Promise.reject(new Error("No Myntra URL provided"))
+
+    const [amazonResult, flipkartResult, myntraResult] = await Promise.allSettled([
+      amazonTask,
+      flipkartTask,
+      myntraTask,
+    ])
+
+    // --- 1. Process Amazon Result ---
     let amazonOffer: MarketplaceProduct
     let amazonError: string | null = null
+
     if (amazonResult.status === "fulfilled" && amazonResult.value.data?.length) {
+      console.log(`[AMAZON] response received: ${amazonResult.value.data.length} records`)
       amazonOffer = normalizeShelfGuardProduct(amazonResult.value.data[0], true)
+      amazonOffer.productUrl = rawAmazonUrl || amazonUrl
+
       if (amazonOffer.price <= 0) {
         amazonOffer.isLive = false
         amazonOffer.productName = hasAmazonUrl ? "Unable to Retrieve" : "Not Provided"
         amazonError = "Bright Data Amazon scraper returned a record without a valid price > 0."
       }
+      console.log(`[AMAZON] parsed price: ${amazonOffer.price}`)
+      console.log(`[AMAZON] live: ${amazonOffer.isLive}`)
+      console.log(`[AMAZON] error: ${amazonError || "none"}`)
     } else {
       amazonError =
         amazonResult.status === "rejected"
           ? amazonResult.reason?.message || "Amazon scraper failed"
           : "Bright Data Amazon scraper returned zero product records."
+      console.log(`[AMAZON] error: ${amazonError}`)
       amazonOffer = {
         marketplace: "amazon",
         productName: hasAmazonUrl ? "Unable to Retrieve" : "Not Provided",
@@ -58,16 +147,22 @@ export async function POST(req: Request) {
         originalPrice: 0,
         currency: "INR",
         stockStatus: "out_of_stock",
-        productUrl: amazonUrl,
+        productUrl: rawAmazonUrl,
         lastChecked: new Date().toISOString(),
         isLive: false,
       }
     }
 
-    // --- 2. Flipkart ---
+    // --- 2. Process Flipkart Result ---
     let flipkartOffer: MarketplaceProduct
     let flipkartError: string | null = null
+
+    if (hasFlipkartUrl) {
+      console.log(`[FLIPKART] request started`)
+    }
+
     if (flipkartResult.status === "fulfilled" && flipkartResult.value.product) {
+      console.log(`[FLIPKART] response received`)
       flipkartOffer = flipkartResult.value.product
       if (!flipkartResult.value.success || flipkartOffer.price <= 0) {
         flipkartOffer.isLive = false
@@ -75,6 +170,9 @@ export async function POST(req: Request) {
         flipkartOffer.productName = hasFlipkartUrl ? "Unable to Retrieve" : "Not Provided"
         flipkartError = flipkartResult.value.error || "Flipkart listing unavailable"
       }
+      console.log(`[FLIPKART] parsed price: ${flipkartOffer.price}`)
+      console.log(`[FLIPKART] live: ${flipkartOffer.isLive}`)
+      console.log(`[FLIPKART] error: ${flipkartError || "none"}`)
     } else {
       flipkartError =
         hasFlipkartUrl && !isFlipkartUrl(flipkartUrl)
@@ -82,6 +180,7 @@ export async function POST(req: Request) {
           : flipkartResult.status === "rejected"
             ? flipkartResult.reason?.message || "Flipkart scraper error"
             : "Flipkart listing unavailable"
+      if (hasFlipkartUrl) console.log(`[FLIPKART] error: ${flipkartError}`)
       flipkartOffer = {
         marketplace: "flipkart",
         productName: hasFlipkartUrl ? "Unable to Retrieve" : "Not Provided",
@@ -97,10 +196,16 @@ export async function POST(req: Request) {
       }
     }
 
-    // --- 3. Myntra ---
+    // --- 3. Process Myntra Result ---
     let myntraOffer: MarketplaceProduct
     let myntraError: string | null = null
+
+    if (hasMyntraUrl) {
+      console.log(`[MYNTRA] request started`)
+    }
+
     if (myntraResult.status === "fulfilled" && myntraResult.value.product) {
+      console.log(`[MYNTRA] response received`)
       myntraOffer = myntraResult.value.product
       if (!myntraResult.value.success || myntraOffer.price <= 0) {
         myntraOffer.isLive = false
@@ -108,6 +213,9 @@ export async function POST(req: Request) {
         myntraOffer.productName = hasMyntraUrl ? "Unable to Retrieve" : "Not Provided"
         myntraError = myntraResult.value.error || "Myntra listing unavailable"
       }
+      console.log(`[MYNTRA] parsed price: ${myntraOffer.price}`)
+      console.log(`[MYNTRA] live: ${myntraOffer.isLive}`)
+      console.log(`[MYNTRA] error: ${myntraError || "none"}`)
     } else {
       myntraError =
         hasMyntraUrl && !isMyntraUrl(myntraUrl)
@@ -115,6 +223,7 @@ export async function POST(req: Request) {
           : myntraResult.status === "rejected"
             ? myntraResult.reason?.message || "Myntra scraper error"
             : "Myntra listing unavailable"
+      if (hasMyntraUrl) console.log(`[MYNTRA] error: ${myntraError}`)
       myntraOffer = {
         marketplace: "myntra",
         productName: hasMyntraUrl ? "Unable to Retrieve" : "Not Provided",

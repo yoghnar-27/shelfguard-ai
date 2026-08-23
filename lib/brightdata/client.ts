@@ -53,13 +53,13 @@ function cleanCollectorId(id?: string): string {
  */
 export function getBrightDataConfig(): BrightDataConfig {
   const apiKey = cleanEnvString(process.env.BRIGHTDATA_API_KEY)
-  const rawCollectorId = cleanEnvString(process.env.BRIGHTDATA_COLLECTOR_ID)
+  const rawCollectorId = cleanEnvString(process.env.BRIGHTDATA_COLLECTOR_ID || "c_mt4maubd1v7q5h4l1e")
   const collectorId = cleanCollectorId(rawCollectorId)
   const baseUrl = cleanEnvString(process.env.BRIGHTDATA_API_BASE_URL || "https://api.brightdata.com")
 
   if (!apiKey || !collectorId) {
     throw new Error(
-      "Bright Data environment variables missing. Ensure BRIGHTDATA_API_KEY and BRIGHTDATA_COLLECTOR_ID are defined."
+      "Bright Data environment variables missing. Ensure BRIGHTDATA_API_KEY is defined."
     )
   }
 
@@ -68,6 +68,35 @@ export function getBrightDataConfig(): BrightDataConfig {
     collectorId,
     baseUrl: baseUrl.replace(/\/$/, ""),
   }
+}
+
+/**
+ * Resolves short links (e.g., amzn.in/d/..., amzn.to/...) to canonical Amazon PDP URLs.
+ */
+export async function resolveAmazonUrl(url: string): Promise<string> {
+  const trimmed = url.trim()
+  if (!trimmed) return ""
+
+  if (trimmed.includes("amzn.in") || trimmed.includes("amzn.to")) {
+    try {
+      console.log(`[AMAZON DEBUG] Resolving short link: ${trimmed}`)
+      const res = await fetch(trimmed, {
+        method: "GET",
+        redirect: "follow",
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        },
+      })
+      if (res.url && (res.url.includes("amazon.in") || res.url.includes("amazon.com"))) {
+        console.log(`[AMAZON DEBUG] Resolved canonical URL: ${res.url}`)
+        return res.url
+      }
+    } catch (err) {
+      console.warn(`[AMAZON DEBUG] Could not resolve short link, proceeding with original URL:`, err)
+    }
+  }
+  return trimmed
 }
 
 export type TriggerScrapeParams = {
