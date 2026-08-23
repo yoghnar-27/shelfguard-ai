@@ -4,7 +4,9 @@ import { Card, CardContent } from "@/components/ui/card"
 import { MonitorPill, StockPill } from "@/components/dashboard/status-pills"
 import { formatDelta, formatMoney } from "@/lib/format"
 import { products } from "@/lib/mock"
+import type { Product } from "@/lib/mock/types"
 import { cn } from "@/lib/utils"
+
 
 const marketSignals: Record<string, string> = {
   "p-growler-1": "Price Undercut -12%",
@@ -15,12 +17,15 @@ const marketSignals: Record<string, string> = {
   "p-bottle-2": "Competitor Restocked",
 }
 
-export function ProductGrid() {
+export function ProductGrid({ liveProduct }: { liveProduct?: Product | null }) {
+  const displayProducts = liveProduct ? [liveProduct, ...products] : products
+
   return (
     <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 page-enter">
-      {products.map((product) => {
+      {displayProducts.map((product) => {
         const delta = formatDelta(product.currentPrice, product.previousPrice)
-        const signal = marketSignals[product.id] || "Market Signal Active"
+        const signal = marketSignals[product.id] || (product.id.startsWith("p-live-") ? "Live Scraped Item" : "Market Signal Active")
+
 
         return (
           <li key={product.id}>
