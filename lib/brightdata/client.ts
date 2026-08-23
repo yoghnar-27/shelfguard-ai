@@ -32,11 +32,20 @@ function sanitizeError(error: unknown, apiKey?: string): Error {
 }
 
 /**
- * Cleans string input by trimming and removing any surrounding quotation marks.
+ * Cleans string input by trimming whitespace and removing surrounding quotation marks.
  */
 function cleanEnvString(val?: string): string {
   if (!val) return ""
-  return val.trim().replace(/^["']|["']$/g, "")
+  return val.trim().replace(/^["']|["']$/g, "").trim()
+}
+
+/**
+ * Cleans a collector ID string, ensuring any query parameters like &queue_next=1 are removed.
+ */
+function cleanCollectorId(id?: string): string {
+  const cleaned = cleanEnvString(id)
+  if (!cleaned) return ""
+  return cleaned.split(/[?&]/)[0].trim()
 }
 
 /**
@@ -44,7 +53,8 @@ function cleanEnvString(val?: string): string {
  */
 export function getBrightDataConfig(): BrightDataConfig {
   const apiKey = cleanEnvString(process.env.BRIGHTDATA_API_KEY)
-  const collectorId = cleanEnvString(process.env.BRIGHTDATA_COLLECTOR_ID)
+  const rawCollectorId = cleanEnvString(process.env.BRIGHTDATA_COLLECTOR_ID)
+  const collectorId = cleanCollectorId(rawCollectorId)
   const baseUrl = cleanEnvString(process.env.BRIGHTDATA_API_BASE_URL || "https://api.brightdata.com")
 
   if (!apiKey || !collectorId) {
@@ -67,109 +77,91 @@ export type TriggerScrapeParams = {
 }
 
 /**
- * Dispatches a trigger request to Bright Data's scraping API endpoint.
- * Dynamically handles both Scraper Studio (/dca/trigger) and Datasets v3 (/datasets/v3/trigger) flows.
+ * Dispatches a trigger request to Bright Data's Scraper Studio (DCA API) endpoint.
+ * Official Batch Trigger format for collector c_mt4maubd1v7q5h4l1e:
+ * POST /dca/trigger?collector=c_mt4maubd1v7q5h4l1e&queue_next=1
+ * Authorization: Bearer <BRIGHTDATA_API_KEY>
+ * Content-Type: application/json
+ * Body: [{"url": inputUrl}]
  */
 export async function triggerBrightDataScrape(
   params: TriggerScrapeParams
 ): Promise<BrightDataTriggerResponse> {
   const config = getBrightDataConfig()
-  const activeCollectorId = cleanEnvString(params.collectorId || config.collectorId)
+  const activeCollectorId = cleanCollectorId(params.collectorId || config.collectorId)
   const payload = params.inputs || (params.url ? [{ url: params.url }] : [])
 
-  const endpoints: string[] = []
-  if (activeCollectorId.startsWith("gd_")) {
-    endpoints.push(
-      `${config.baseUrl}/datasets/v3/trigger?dataset_id=${encodeURIComponent(activeCollectorId)}`,
-      `${config.baseUrl}/dca/trigger?collector=${encodeURIComponent(activeCollectorId)}&queue_next=1`
-    )
-  } else {
-    endpoints.push(
-      `${config.baseUrl}/dca/trigger?collector=${encodeURIComponent(activeCollectorId)}&queue_next=1`,
-      `${config.baseUrl}/datasets/v3/trigger?dataset_id=${encodeURIComponent(activeCollectorId)}`
-    )
-  }
+  const endpoint = `${config.baseUrl}/dca/trigger?collector=${encodeURIComponent(activeCollectorId)}&queue_next=1`
 
-  let lastErrorMsg = ""
+  console.log(`[BrightData] Collector ID in use: ${activeCollectorId}`)
+  console.log(`[BrightData] Trigger URL: ${endpoint}`)
 
-  for (const endpoint of endpoints) {
-    try {
-      // 1. Standard Bearer Authorization Header
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${config.apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      })
+  try {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${config.apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    })
 
-      if (response.ok) {
-        return (await response.json()) as BrightDataTriggerResponse
-      }
+    console.log(`[BrightData] Trigger HTTP status: ${response.status}`)
 
-      // 2. Query Parameter Auth Fallback if 401 Returned
-      if (response.status === 401) {
-        const altEndpoint = endpoint.includes("?")
-          ? `${endpoint}&api_token=${encodeURIComponent(config.apiKey)}`
-          : `${endpoint}?api_token=${encodeURIComponent(config.apiKey)}`
-
-        const altResponse = await fetch(altEndpoint, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        })
-
-        if (altResponse.ok) {
-          return (await altResponse.json()) as BrightDataTriggerResponse
-        }
-      }
-
+    if (!response.ok) {
       const errorBody = await response.text().catch(() => "No error body")
-      lastErrorMsg = `Bright Data API HTTP ${response.status}: ${errorBody}`
-    } catch (err) {
-      lastErrorMsg = err instanceof Error ? err.message : String(err)
+      console.log(`[BrightData] Response body: ${errorBody}`)
+      throw new Error(`Bright Data API HTTP ${response.status}: ${errorBody}`)
     }
-  }
 
-  throw sanitizeError(new Error(lastErrorMsg), config.apiKey)
+    const bodyText = await response.text()
+    console.log(`[BrightData] Response body: ${bodyText}`)
+
+    let data: BrightDataTriggerResponse
+    try {
+      data = JSON.parse(bodyText) as BrightDataTriggerResponse
+    } catch {
+      throw new Error(`Failed to parse Bright Data trigger response as JSON: ${bodyText}`)
+    }
+
+    return data
+  } catch (err) {
+    throw sanitizeError(err, config.apiKey)
+  }
 }
 
+
 /**
- * Polls Bright Data for the status and result of a triggered collection snapshot.
+ * Polls Bright Data for the results of a triggered collection using the official Scraper Studio dataset endpoint:
+ * GET /dca/dataset?id=COLLECTION_ID
+ * Authorization: Bearer <BRIGHTDATA_API_KEY>
  */
 export async function pollBrightDataResult(
-  snapshotId: string,
+  collectionId: string,
   options?: BrightDataPollOptions
 ): Promise<BrightDataProduct[]> {
   const config = getBrightDataConfig()
-  const intervalMs = options?.intervalMs ?? 3000
-  const maxAttempts = options?.maxAttempts ?? 20
-  const timeoutMs = options?.timeoutMs ?? 60000
+  const intervalMs = options?.intervalMs ?? 5000
+  const maxAttempts = options?.maxAttempts ?? 30
+  const timeoutMs = options?.timeoutMs ?? 150000
 
   const startTime = Date.now()
-  const cleanId = cleanEnvString(snapshotId)
+  const cleanId = cleanEnvString(collectionId)
+  const endpoint = `${config.baseUrl}/dca/dataset?id=${encodeURIComponent(cleanId)}`
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     if (Date.now() - startTime > timeoutMs) {
-      throw new Error(`Bright Data polling timed out after ${Math.round(timeoutMs / 1000)} seconds for snapshot ${cleanId}.`)
+      throw new Error(`Bright Data polling timed out after ${Math.round(timeoutMs / 1000)}s for collection ${cleanId}.`)
     }
 
+    console.log(`[BrightData] Polling collection...`)
+
     try {
-      // Endpoint candidate 1: DCA Result (/dca/get_result)
-      const dcaEndpoint = `${config.baseUrl}/dca/get_result?snapshot_id=${encodeURIComponent(cleanId)}`
-      const response = await fetch(dcaEndpoint, {
+      const response = await fetch(endpoint, {
         headers: {
           Authorization: `Bearer ${config.apiKey}`,
         },
       })
-
-      if (response.status === 202) {
-        await new Promise((resolve) => setTimeout(resolve, intervalMs))
-        continue
-      }
 
       if (response.status === 200) {
         const bodyText = await response.text()
@@ -178,12 +170,15 @@ export async function pollBrightDataResult(
           parsed = JSON.parse(bodyText)
         } catch {
           if (bodyText.trim()) {
+            console.log(`[BrightData] Raw result text received for collection ${cleanId}.`)
             return [{ product_name: "Extracted Item", raw_output: bodyText }]
           }
           throw new Error("Bright Data response could not be parsed as JSON.")
         }
 
+        // Check if response is a JSON array -> SUCCESS
         if (Array.isArray(parsed)) {
+          console.log(`[BrightData] Collection ready: ${parsed.length} records`)
           return parsed as BrightDataProduct[]
         }
 
@@ -191,62 +186,37 @@ export async function pollBrightDataResult(
           const resObj = parsed as Record<string, unknown>
 
           if (Array.isArray(resObj.records)) {
+            console.log(`[BrightData] Collection ready: ${resObj.records.length} records`)
             return resObj.records as BrightDataProduct[]
           }
 
           if (Array.isArray(resObj.data)) {
+            console.log(`[BrightData] Collection ready: ${resObj.data.length} records`)
             return resObj.data as BrightDataProduct[]
           }
 
           const statusStr = String(resObj.status || "").toLowerCase()
-          if (["running", "building", "collecting", "queued", "pending"].includes(statusStr)) {
+          if (["building", "collecting", "queued", "pending", "running"].includes(statusStr)) {
+            // Collection still building/processing, wait and poll again
             await new Promise((resolve) => setTimeout(resolve, intervalMs))
             continue
           }
 
           if (statusStr === "failed") {
-            throw new Error(`Bright Data collection failed for snapshot ${cleanId}: ${String(resObj.error || "Unknown error")}`)
+            throw new Error(`Bright Data collection failed for collection ${cleanId}: ${String(resObj.error || "Failed")}`)
           }
 
+          // Single record object returned
+          console.log(`[BrightData] Collection ready: 1 record`)
           return [resObj as BrightDataProduct]
         }
-      }
-
-      // Endpoint candidate 2: Datasets v3 progress & snapshot retrieval
-      const v3ProgressUrl = `${config.baseUrl}/datasets/v3/progress/${encodeURIComponent(cleanId)}`
-      const v3ProgRes = await fetch(v3ProgressUrl, {
-        headers: {
-          Authorization: `Bearer ${config.apiKey}`,
-        },
-      })
-
-      if (v3ProgRes.ok) {
-        const v3Prog = (await v3ProgRes.json()) as { status?: string; error?: string }
-        const st = (v3Prog.status || "").toLowerCase()
-
-        if (st === "ready") {
-          const v3DataUrl = `${config.baseUrl}/datasets/v3/snapshot/${encodeURIComponent(cleanId)}?format=json`
-          const v3DataRes = await fetch(v3DataUrl, {
-            headers: {
-              Authorization: `Bearer ${config.apiKey}`,
-            },
-          })
-
-          if (v3DataRes.ok) {
-            const v3Data = (await v3DataRes.json()) as unknown
-            if (Array.isArray(v3Data)) {
-              return v3Data as BrightDataProduct[]
-            }
-            if (v3Data && typeof v3Data === "object") {
-              return [v3Data as BrightDataProduct]
-            }
-          }
-        } else if (["running", "building", "collecting", "queued", "pending"].includes(st)) {
-          await new Promise((resolve) => setTimeout(resolve, intervalMs))
-          continue
-        } else if (st === "failed") {
-          throw new Error(`Bright Data collection failed for snapshot ${cleanId}: ${v3Prog.error || "Failed"}`)
-        }
+      } else if (response.status === 202) {
+        // HTTP 202 Accepted - Still building
+        await new Promise((resolve) => setTimeout(resolve, intervalMs))
+        continue
+      } else {
+        const errText = await response.text().catch(() => "")
+        console.log(`[BrightData] Polling status HTTP ${response.status}: ${errText}`)
       }
     } catch (err) {
       if (attempt === maxAttempts) {
@@ -257,7 +227,7 @@ export async function pollBrightDataResult(
     await new Promise((resolve) => setTimeout(resolve, intervalMs))
   }
 
-  throw new Error(`Bright Data polling exceeded maximum attempts (${maxAttempts}) for snapshot ${cleanId}.`)
+  throw new Error(`Bright Data polling exceeded maximum attempts (${maxAttempts}) for collection ${cleanId}.`)
 }
 
 export type ScrapeExecutionResult = {
@@ -268,7 +238,9 @@ export type ScrapeExecutionResult = {
 }
 
 /**
- * Higher-level workflow to trigger collection, poll for completion, and map output to Product domain models.
+ * Higher-level workflow to trigger collection via POST /dca/trigger,
+ * poll for completion via GET /dca/dataset?id=COLLECTION_ID,
+ * and map output to Product domain models.
  */
 export async function executeBrightDataScrape(params: {
   url: string
@@ -280,6 +252,7 @@ export async function executeBrightDataScrape(params: {
     collectorId: params.collectorId,
   })
 
+  // Check if payload arrived synchronously in trigger response
   let rawItems: BrightDataProduct[] | null = null
   if (Array.isArray(triggerRes)) {
     rawItems = triggerRes as BrightDataProduct[]
@@ -289,32 +262,37 @@ export async function executeBrightDataScrape(params: {
     rawItems = triggerRes.data
   }
 
-  const snapshotId =
-    triggerRes.snapshot_id || triggerRes.collection_id || triggerRes.job_id || triggerRes.id
+  const collectionId =
+    triggerRes.collection_id || triggerRes.response_id || triggerRes.snapshot_id || triggerRes.job_id || triggerRes.id
 
   if (rawItems && rawItems.length > 0) {
+    console.log(`[BrightData] Synchronous collection ready: ${rawItems.length} records`)
     const products = rawItems.map((item) => mapBrightDataToShelfGuardProduct(item))
     return {
-      snapshotId: snapshotId ? String(snapshotId) : undefined,
+      snapshotId: collectionId ? String(collectionId) : undefined,
       source: "live_brightdata",
       count: products.length,
       data: products,
     }
   }
 
-  if (!snapshotId) {
-    throw new Error("Bright Data trigger did not return a valid snapshot ID or synchronous dataset payload.")
+  if (!collectionId) {
+    throw new Error("Bright Data trigger did not return a valid collection_id or synchronous payload.")
   }
 
-  const polledItems = await pollBrightDataResult(String(snapshotId), params.pollOptions)
+  console.log(`[BrightData] Triggered collection: ${collectionId}`)
+
+  const polledItems = await pollBrightDataResult(String(collectionId), params.pollOptions)
   const products = polledItems.map((item) => mapBrightDataToShelfGuardProduct(item))
 
   return {
-    snapshotId: String(snapshotId),
+    snapshotId: String(collectionId),
     source: "live_brightdata",
     count: products.length,
     data: products,
   }
 }
+
+
 
 
