@@ -1,8 +1,8 @@
 "use client"
 
 import type { ReactNode } from "react"
-import { Activity, ShieldCheck, Zap } from "lucide-react"
-import { kpis, workspace } from "@/lib/mock"
+import { Activity, Boxes, Layers, ShieldCheck, Zap } from "lucide-react"
+import { kpis } from "@/lib/mock"
 
 export function CommandHero({ actions }: { actions?: ReactNode }) {
   return (
@@ -25,7 +25,7 @@ export function CommandHero({ actions }: { actions?: ReactNode }) {
                 <span className="absolute inline-flex size-2 animate-ping rounded-full bg-teal opacity-75" />
                 <span className="relative inline-flex size-2 rounded-full bg-teal" />
               </span>
-              Live Monitoring
+              Monitoring Active
             </span>
 
             <span className="inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-xs font-semibold tracking-wider text-gold uppercase">
@@ -38,7 +38,7 @@ export function CommandHero({ actions }: { actions?: ReactNode }) {
             <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
               ShelfGuard AI
             </h1>
-            <p className="mt-1 text-sm font-medium tracking-wide text-muted-foreground uppercase sm:text-base">
+            <p className="mt-1 text-xs font-semibold tracking-wider text-gold uppercase sm:text-sm">
               Competitive Intelligence Command Center
             </p>
           </div>
@@ -51,52 +51,52 @@ export function CommandHero({ actions }: { actions?: ReactNode }) {
         {actions ? <div className="flex shrink-0 flex-wrap items-center gap-2.5">{actions}</div> : null}
       </div>
 
-      {/* Meta Indicators Grid */}
+      {/* System Status Indicators Grid */}
       <div className="relative z-10 mt-6 grid grid-cols-2 gap-3 border-t border-border/60 pt-4 sm:grid-cols-4">
-        <div className="flex items-center gap-2.5 rounded-lg border border-border/50 bg-card/50 px-3 py-2">
+        <div className="flex items-center gap-2.5 rounded-xl border border-border/50 bg-card/60 px-3.5 py-2.5 shadow-sm">
+          <ShieldCheck className="size-4 shrink-0 text-teal" aria-hidden />
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
+              System Status
+            </p>
+            <p className="truncate text-xs font-semibold tabular-nums text-teal">
+              Monitoring Active · {kpis.scraperHealth}%
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2.5 rounded-xl border border-border/50 bg-card/60 px-3.5 py-2.5 shadow-sm">
           <Activity className="size-4 shrink-0 text-gold" aria-hidden />
           <div className="min-w-0">
             <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
-              Last Synchronized
+              Last Scan
             </p>
-            <p className="truncate text-xs font-medium tabular-nums text-foreground">
+            <p className="truncate text-xs font-semibold tabular-nums text-foreground">
               {kpis.lastRunAgo}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5 rounded-lg border border-border/50 bg-card/50 px-3 py-2">
-          <ShieldCheck className="size-4 shrink-0 text-teal" aria-hidden />
+        <div className="flex items-center gap-2.5 rounded-xl border border-border/50 bg-card/60 px-3.5 py-2.5 shadow-sm">
+          <Boxes className="size-4 shrink-0 text-gold" aria-hidden />
           <div className="min-w-0">
             <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
-              Collector Status
+              Products Tracked
             </p>
-            <p className="truncate text-xs font-medium tabular-nums text-teal">
-              {kpis.scraperHealth}% Healthy
+            <p className="truncate text-xs font-semibold tabular-nums text-foreground">
+              {kpis.trackedProducts} SKUs Monitored
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5 rounded-lg border border-border/50 bg-card/50 px-3 py-2">
-          <span className="size-2 rounded-full bg-gold" aria-hidden />
+        <div className="flex items-center gap-2.5 rounded-xl border border-border/50 bg-card/60 px-3.5 py-2.5 shadow-sm">
+          <Layers className="size-4 shrink-0 text-teal" aria-hidden />
           <div className="min-w-0">
             <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
-              Tracked Retailers
+              Marketplaces Monitored
             </p>
-            <p className="truncate text-xs font-medium text-foreground">
-              Amazon · Flipkart · Myntra
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2.5 rounded-lg border border-border/50 bg-card/50 px-3 py-2">
-          <span className="size-2 rounded-full bg-teal" aria-hidden />
-          <div className="min-w-0">
-            <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
-              Workspace
-            </p>
-            <p className="truncate text-xs font-medium text-foreground">
-              {workspace.name}
+            <p className="truncate text-xs font-semibold text-foreground">
+              Amazon · Flipkart · Myntra · Meesho · Purplle
             </p>
           </div>
         </div>
@@ -104,3 +104,4 @@ export function CommandHero({ actions }: { actions?: ReactNode }) {
     </div>
   )
 }
+

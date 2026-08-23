@@ -98,21 +98,43 @@ export function OpportunityCard({
               open ? "grid-rows-[1fr] opacity-100 pt-1" : "grid-rows-[0fr] opacity-0 overflow-hidden"
             )}
           >
-            <div className="overflow-hidden space-y-3 border-t border-border/60 pt-3">
+            <div className="overflow-hidden space-y-3.5 border-t border-border/60 pt-3 text-xs">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-lg border border-border/50 bg-muted/20 p-2.5">
+                  <p className="text-[10px] font-semibold tracking-widest text-gold uppercase">
+                    Why This Matters
+                  </p>
+                  <p className="mt-1 text-xs text-foreground leading-relaxed">
+                    Direct competitor pricing or availability shift creating a high-converting window for your listing.
+                  </p>
+                </div>
+
+                <div className="rounded-lg border border-border/50 bg-muted/20 p-2.5">
+                  <p className="text-[10px] font-semibold tracking-widest text-teal uppercase">
+                    Evidence
+                  </p>
+                  <p className="mt-1 text-xs font-mono text-muted-foreground">
+                    Event: {opportunity.event} ({formatDateTime(opportunity.at)})
+                  </p>
+                </div>
+              </div>
+
               <div>
                 <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
-                  Recommended action
+                  Recommended Action
                 </p>
-                <p className="mt-1 text-xs leading-relaxed text-foreground font-medium bg-muted/30 p-2.5 rounded-lg border border-border/40">
+                <p className="mt-1 text-xs leading-relaxed text-foreground font-medium bg-muted/40 p-2.5 rounded-lg border border-border/40">
                   “{opportunity.action}”
                 </p>
               </div>
-              <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-                <span className="size-1.5 rounded-full bg-gold" />
-                {opportunity.window}
-              </p>
+
+              <div className="flex items-center justify-between border-t border-border/40 pt-2 text-[11px]">
+                <span className="font-semibold text-muted-foreground uppercase tracking-wider">Potential Impact:</span>
+                <span className="font-medium text-teal">{opportunity.impact}</span>
+              </div>
             </div>
           </div>
+
 
           <div className="flex flex-wrap items-center gap-2 pt-1">
             <Button size="sm" onClick={() => setDrawer(true)} className="bg-gold text-gold-foreground hover:bg-gold/90">

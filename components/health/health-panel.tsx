@@ -69,44 +69,82 @@ function Stat({
 }
 
 export function HealTimeline() {
-  return (
-    <ol className="relative space-y-0">
-      {healTimeline.map((event, index) => {
-        const isSuccess = event.title.includes("Recovery") || event.title.includes("Approval")
-        const isWarning = event.title.includes("Failure") || event.title.includes("Missed")
+  const steps = [
+    { title: "Detection", status: "complete", label: "DOM Selector Miss" },
+    { title: "Diagnosis", status: "complete", label: "Structural Change Identified" },
+    { title: "Repair", status: "complete", label: "Auto-Refactored Selector" },
+    { title: "Verification", status: "active", label: "Validation Clean" },
+  ]
 
-        return (
-          <li key={`${event.time}-${event.title}`} className="relative grid grid-cols-[4.5rem_1fr] gap-4 pb-6 last:pb-0">
-            {index < healTimeline.length - 1 ? (
-              <span
-                className="absolute top-6 left-[calc(4.5rem+0.35rem)] h-[calc(100%-0.5rem)] w-0.5 bg-gradient-to-b from-gold via-border to-border/40"
-                aria-hidden
-              />
-            ) : null}
-            <time className="pt-0.5 font-mono text-xs font-semibold text-gold tabular-nums">{event.time}</time>
-            <div className="group relative rounded-xl border border-border/70 bg-card/60 p-4 transition-all duration-200 hover:border-gold/30 hover:bg-card">
-              <span
-                className={cn(
-                  "absolute top-4 -left-[1.2rem] size-3 rounded-full border-2 border-background shadow-md",
-                  isSuccess && "bg-teal border-teal shadow-[0_0_10px_oklch(0.78_0.11_185_/_0.6)]",
-                  isWarning && "bg-signal border-signal shadow-[0_0_10px_oklch(0.68_0.18_25_/_0.6)]",
-                  !isSuccess && !isWarning && "bg-gold border-gold shadow-[0_0_10px_oklch(0.84_0.14_85_/_0.6)]"
-                )}
-                aria-hidden
-              />
-              <div className="flex items-center justify-between gap-2">
-                <p className="font-semibold text-sm text-foreground group-hover:text-gold transition-colors">{event.title}</p>
-                {isSuccess ? <CheckCircle2 className="size-4 text-teal" /> : null}
-                {isWarning ? <AlertCircle className="size-4 text-signal" /> : null}
+  return (
+    <div className="space-y-6">
+      {/* 4-Step Self-Healing Sequence Bar */}
+      <div className="rounded-xl border border-border/70 bg-card/80 p-4 shadow-sm">
+        <p className="text-[10px] font-bold tracking-widest text-gold uppercase mb-3">
+          Self-Healing Sequence Pipeline
+        </p>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {steps.map((s, idx) => (
+            <div
+              key={s.title}
+              className={cn(
+                "relative rounded-lg border p-2.5 transition-all duration-200",
+                s.status === "active"
+                  ? "border-teal/40 bg-teal/10 shadow-[0_0_12px_oklch(0.78_0.11_185_/_0.2)]"
+                  : "border-border/60 bg-background/50"
+              )}
+            >
+              <div className="flex items-center justify-between text-[10px] font-semibold text-muted-foreground uppercase">
+                <span>0{idx + 1}. {s.title}</span>
+                <CheckCircle2 className="size-3 text-teal" />
               </div>
-              <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{event.detail}</p>
+              <p className="mt-1 font-mono text-[11px] font-semibold text-foreground truncate">
+                {s.label}
+              </p>
             </div>
-          </li>
-        )
-      })}
-    </ol>
+          ))}
+        </div>
+      </div>
+
+      <ol className="relative space-y-0">
+        {healTimeline.map((event, index) => {
+          const isSuccess = event.title.includes("Recovery") || event.title.includes("Approval")
+          const isWarning = event.title.includes("Failure") || event.title.includes("Missed")
+
+          return (
+            <li key={`${event.time}-${event.title}`} className="relative grid grid-cols-[4.5rem_1fr] gap-4 pb-6 last:pb-0">
+              {index < healTimeline.length - 1 ? (
+                <span
+                  className="absolute top-6 left-[calc(4.5rem+0.35rem)] h-[calc(100%-0.5rem)] w-0.5 bg-gradient-to-b from-gold via-border to-border/40"
+                  aria-hidden
+                />
+              ) : null}
+              <time className="pt-0.5 font-mono text-xs font-semibold text-gold tabular-nums">{event.time}</time>
+              <div className="group relative rounded-xl border border-border/70 bg-card/60 p-4 transition-all duration-200 hover:border-gold/30 hover:bg-card">
+                <span
+                  className={cn(
+                    "absolute top-4 -left-[1.2rem] size-3 rounded-full border-2 border-background shadow-md",
+                    isSuccess && "bg-teal border-teal shadow-[0_0_10px_oklch(0.78_0.11_185_/_0.6)]",
+                    isWarning && "bg-signal border-signal shadow-[0_0_10px_oklch(0.68_0.18_25_/_0.6)]",
+                    !isSuccess && !isWarning && "bg-gold border-gold shadow-[0_0_10px_oklch(0.84_0.14_85_/_0.6)]"
+                  )}
+                  aria-hidden
+                />
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-semibold text-sm text-foreground group-hover:text-gold transition-colors">{event.title}</p>
+                  {isSuccess ? <CheckCircle2 className="size-4 text-teal" /> : null}
+                  {isWarning ? <AlertCircle className="size-4 text-signal" /> : null}
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{event.detail}</p>
+              </div>
+            </li>
+          )
+        })}
+      </ol>
+    </div>
   )
 }
+
 
 export function ScraperRuns() {
   return (
